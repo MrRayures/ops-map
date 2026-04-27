@@ -3,7 +3,8 @@ import MapPin from "@lucide/astro/icons/map-pin";
 import Wrench from "@lucide/astro/icons/wrench";
 import Settings from "@lucide/astro/icons/settings";
 import Save from "@lucide/astro/icons/save";
-import FolderOpen from "@lucide/astro/icons/folder-open";
+import Download from "@lucide/astro/icons/download";
+import Upload from "@lucide/astro/icons/upload";
 import ChevronLeft from "@lucide/astro/icons/chevron-left";
 
 import { panels, tabId, panelId, type PanelId } from "../data/panels";
@@ -16,7 +17,8 @@ const panelIcons = {
 
 const actionItems = [
   { id: "save", label: "Sauvegarder", Icon: Save },
-  { id: "load", label: "Charger", Icon: FolderOpen },
+  { id: "export", label: "Exporter", Icon: Download },
+  { id: "import", label: "Importer", Icon: Upload },
 ] as const;
 
 const defaultPanel: PanelId = panels[0].id;
