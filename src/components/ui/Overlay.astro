@@ -1,0 +1,18 @@
+---
+interface Props {
+  class?: string;
+}
+
+const { class: extraClass } = Astro.props;
+
+const classes = [
+  "border-l-2 border-accent bg-[var(--overlay-bg)] p-3 font-mono text-fg-primary",
+  extraClass,
+]
+  .filter(Boolean)
+  .join(" ");
+---
+
+<aside class={classes}>
+  <slot />
+</aside>
