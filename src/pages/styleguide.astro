@@ -1,5 +1,8 @@
 ---
 import "../styles/global.css";
+import Button from "../components/ui/Button.astro";
+import Card from "../components/ui/Card.astro";
+import Badge from "../components/ui/Badge.astro";
 
 const surfaces = [
   { token: "--color-surface-base", utility: "bg-surface-base", hex: "#0F1419" },
@@ -170,6 +173,116 @@ const swatchGroups = [
               · Live transmission ·
             </p>
           </article>
+        </div>
+      </section>
+
+      <section class="border-t border-line-subtle py-10" aria-labelledby="sec-buttons">
+        <h2 id="sec-buttons" class="mb-6 text-xl font-semibold">C. Buttons</h2>
+
+        <div class="grid gap-4 sm:grid-cols-3">
+          <Card>
+            <span slot="header" class="font-mono text-xs tracking-wider text-fg-secondary uppercase">
+              Primary
+            </span>
+            <div class="flex flex-col items-start gap-3">
+              <Button variant="primary" size="md">Lancer la partie</Button>
+              <Button variant="primary" size="sm">Sauvegarder</Button>
+              <Button variant="primary" size="md" disabled>Désactivé</Button>
+            </div>
+          </Card>
+
+          <Card>
+            <span slot="header" class="font-mono text-xs tracking-wider text-fg-secondary uppercase">
+              Secondary
+            </span>
+            <div class="flex flex-col items-start gap-3">
+              <Button variant="secondary" size="md">Annuler</Button>
+              <Button variant="secondary" size="sm">Détails</Button>
+              <Button variant="secondary" size="md" disabled>Désactivé</Button>
+            </div>
+          </Card>
+
+          <Card>
+            <span slot="header" class="font-mono text-xs tracking-wider text-fg-secondary uppercase">
+              Ghost
+            </span>
+            <div class="flex flex-col items-start gap-3">
+              <Button variant="ghost" size="md">Plus d'options</Button>
+              <Button variant="ghost" size="sm">Réinitialiser</Button>
+            </div>
+          </Card>
+        </div>
+
+        <p class="mt-3 text-sm text-fg-muted">
+          Tab pour visualiser le focus ring jaune (outline-accent).
+        </p>
+      </section>
+
+      <section class="border-t border-line-subtle py-10" aria-labelledby="sec-cards">
+        <h2 id="sec-cards" class="mb-6 text-xl font-semibold">D. Cards</h2>
+
+        <div class="grid gap-4 lg:grid-cols-3">
+          <Card>
+            <p>Card minimale — fond surface-card, bordure line-default, radius-md.</p>
+          </Card>
+
+          <Card>
+            <h3 slot="header" class="text-sm font-semibold text-fg-primary">
+              Avec header
+            </h3>
+            <p class="text-fg-secondary">
+              Le header est séparé par une bordure subtile et un padding contrôlé.
+            </p>
+          </Card>
+
+          <Card>
+            <h3 slot="header" class="text-sm font-semibold text-fg-primary">
+              Header + footer
+            </h3>
+            <p class="text-fg-secondary">
+              Slots header et footer peuvent coexister.
+            </p>
+            <span slot="footer" class="font-mono text-xs text-fg-muted">
+              Footer · métadonnées
+            </span>
+          </Card>
+        </div>
+      </section>
+
+      <section class="border-t border-line-subtle py-10" aria-labelledby="sec-badges">
+        <h2 id="sec-badges" class="mb-6 text-xl font-semibold">E. Badges</h2>
+
+        <div class="grid gap-4 lg:grid-cols-3">
+          <Card>
+            <span slot="header" class="font-mono text-xs tracking-wider text-fg-secondary uppercase">
+              Live indicator
+            </span>
+            <Badge variant="live">Live</Badge>
+          </Card>
+
+          <Card>
+            <span slot="header" class="font-mono text-xs tracking-wider text-fg-secondary uppercase">
+              Équipes
+            </span>
+            <div class="flex flex-wrap gap-2">
+              <Badge variant="team" team="red">Rouge</Badge>
+              <Badge variant="team" team="blue">Bleu</Badge>
+              <Badge variant="team" team="green">Vert</Badge>
+              <Badge variant="team" team="purple">Violet</Badge>
+            </div>
+          </Card>
+
+          <Card>
+            <span slot="header" class="font-mono text-xs tracking-wider text-fg-secondary uppercase">
+              Status sémantique
+            </span>
+            <div class="flex flex-wrap gap-2">
+              <Badge variant="status" status="success">Succès</Badge>
+              <Badge variant="status" status="warning">Attention</Badge>
+              <Badge variant="status" status="danger">Erreur</Badge>
+              <Badge variant="status" status="info">Info</Badge>
+            </div>
+          </Card>
         </div>
       </section>
     </main>
