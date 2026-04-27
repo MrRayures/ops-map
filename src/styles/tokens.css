@@ -1,0 +1,53 @@
+@theme {
+  /* Surfaces */
+  --color-surface-base: #0f1419;
+  --color-surface-card: #1a2230;
+  --color-surface-elevated: #2a3548;
+
+  /* Lines */
+  --color-line-subtle: #1f2937;
+  --color-line-default: #2a3548;
+
+  /* Foreground (texte) */
+  --color-fg-primary: #e8ecf1;
+  --color-fg-secondary: #9aa5b4;
+  --color-fg-muted: #6b7785;
+
+  /* Accent signature */
+  --color-accent: #ffb627;
+  --color-accent-hover: #ffc547;
+  --color-accent-on: #4a3300;
+
+  /* Teams / factions */
+  --color-team-red: #c8412c;
+  --color-team-blue: #2b6a8f;
+  --color-team-green: #5c8a3a;
+  --color-team-purple: #8b4faa;
+  --color-team-stroke: #e8e4d9;
+
+  /* Markers tactiques */
+  --color-marker-objective: #ff6b2b;
+  --color-marker-spawn: #3da88c;
+  --color-marker-danger: #b83838;
+  --color-marker-cover: #6b5d47;
+
+  /* Sémantique UI */
+  --color-success: #3da88c;
+  --color-warning: #ffb627;
+  --color-danger: #ff4d4d;
+  --color-info: #4a9eff;
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Shadows / glows */
+  --shadow-glow-accent: 0 0 20px rgba(255, 182, 39, 0.25);
+  --shadow-glow-objective: 0 0 12px rgba(255, 107, 43, 0.6);
+
+  /* Fonts */
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono:
+    "JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
