@@ -1,0 +1,16 @@
+.c-grid-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      var(--grid-line) 0 1px,
+      transparent 1px var(--grid-cell)
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      var(--grid-line) 0 1px,
+      transparent 1px var(--grid-cell)
+    );
+}
