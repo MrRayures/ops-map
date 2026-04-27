@@ -1,0 +1,183 @@
+---
+import MapPin from "@lucide/astro/icons/map-pin";
+import Wrench from "@lucide/astro/icons/wrench";
+import Settings from "@lucide/astro/icons/settings";
+import Save from "@lucide/astro/icons/save";
+import FolderOpen from "@lucide/astro/icons/folder-open";
+import ChevronLeft from "@lucide/astro/icons/chevron-left";
+
+import { panels, tabId, panelId, type PanelId } from "../data/panels";
+
+const panelIcons = {
+  address: MapPin,
+  tools: Wrench,
+  settings: Settings,
+} as const satisfies Record<PanelId, unknown>;
+
+const actionItems = [
+  { id: "save", label: "Sauvegarder", Icon: Save },
+  { id: "load", label: "Charger", Icon: FolderOpen },
+] as const;
+
+const defaultPanel: PanelId = panels[0].id;
+
+const navButton =
+  "group relative grid size-11 place-items-center rounded-sm text-fg-secondary transition-colors hover:bg-surface-elevated hover:text-fg-primary aria-selected:bg-surface-elevated aria-selected:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+
+const tooltip =
+  "pointer-events-none absolute left-full top-1/2 z-10 ml-3 -translate-y-1/2 whitespace-nowrap rounded-sm bg-surface-elevated px-2 py-1 font-mono text-xs tracking-wider text-fg-primary uppercase shadow-lg opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100";
+
+const iconSize = 20;
+---
+
+<aside
+  class="flex h-full w-16 shrink-0 flex-col items-center gap-2 border-r border-line-default bg-surface-base py-3 text-fg-primary"
+  aria-label="Panneau latéral"
+>
+  <h1 class="contents">
+    <a
+      href="/"
+      class="group relative grid size-10 place-items-center rounded-sm bg-accent font-mono font-bold text-accent-on uppercase outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      aria-label="ops-map — accueil"
+    >
+      O
+      <span aria-hidden="true" class={tooltip}>ops-map</span>
+    </a>
+  </h1>
+
+  <div class="my-1 h-px w-8 bg-line-default" aria-hidden="true"></div>
+
+  <nav aria-label="Navigation">
+    <ul role="tablist" aria-orientation="vertical" class="flex flex-col gap-1">
+      {
+        panels.map((item) => {
+          const Icon = panelIcons[item.id];
+          return (
+            <li role="presentation">
+              <button
+                type="button"
+                id={tabId(item.id)}
+                role="tab"
+                aria-selected={item.id === defaultPanel ? "true" : "false"}
+                aria-controls={panelId(item.id)}
+                tabindex={item.id === defaultPanel ? 0 : -1}
+                class={navButton}
+              >
+                <span class="sr-only">{item.label}</span>
+                <span aria-hidden="true" class={tooltip}>
+                  {item.label}
+                </span>
+                <Icon size={iconSize} aria-hidden="true" />
+              </button>
+            </li>
+          );
+        })
+      }
+    </ul>
+  </nav>
+
+  <div
+    class="mt-auto flex flex-col gap-1 border-t border-line-default pt-3"
+    role="group"
+    aria-label="Persistance"
+  >
+    {
+      actionItems.map(({ id, label, Icon }) => (
+        <button type="button" data-action={id} class={navButton}>
+          <span class="sr-only">{label}</span>
+          <span aria-hidden="true" class={tooltip}>
+            {label}
+          </span>
+          <Icon size={iconSize} aria-hidden="true" />
+        </button>
+      ))
+    }
+  </div>
+
+  <div
+    class="flex flex-col gap-1 border-t border-line-default pt-3"
+    role="group"
+    aria-label="Affichage"
+  >
+    <button
+      type="button"
+      id="panel-toggle"
+      aria-expanded="true"
+      aria-controls="panel-group"
+      aria-label="Réduire le panneau"
+      class={navButton}
+    >
+      <span class="sr-only" data-toggle-label>Réduire le panneau</span>
+      <span aria-hidden="true" class={tooltip} data-toggle-tooltip>Réduire le panneau</span>
+      <ChevronLeft
+        size={iconSize}
+        aria-hidden="true"
+        class="transition-transform duration-200 group-aria-[expanded=false]:rotate-180"
+      />
+    </button>
+  </div>
+</aside>
+
+<script>
+  const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+  const panels = Array.from(document.querySelectorAll<HTMLElement>('[role="tabpanel"]'));
+
+  function activate(target: HTMLButtonElement) {
+    for (const tab of tabs) {
+      const isActive = tab === target;
+      tab.setAttribute("aria-selected", String(isActive));
+      tab.tabIndex = isActive ? 0 : -1;
+    }
+    const controlsId = target.getAttribute("aria-controls");
+    for (const panel of panels) {
+      panel.hidden = panel.id !== controlsId;
+    }
+  }
+
+  for (const tab of tabs) {
+    tab.addEventListener("click", () => activate(tab));
+    tab.addEventListener("keydown", (event) => {
+      const keys = ["ArrowUp", "ArrowDown", "Home", "End"];
+      if (!keys.includes(event.key)) return;
+      event.preventDefault();
+      const idx = tabs.indexOf(tab);
+      let next: HTMLButtonElement;
+      switch (event.key) {
+        case "ArrowUp":
+          next = tabs[idx - 1] ?? tabs[tabs.length - 1];
+          break;
+        case "ArrowDown":
+          next = tabs[idx + 1] ?? tabs[0];
+          break;
+        case "Home":
+          next = tabs[0];
+          break;
+        default:
+          next = tabs[tabs.length - 1];
+      }
+      next.focus();
+      activate(next);
+    });
+  }
+
+  const toggle = document.getElementById("panel-toggle");
+  const panel = document.getElementById("panel-group");
+  if (toggle && panel) {
+    const labelOpen = "Réduire le panneau";
+    const labelClosed = "Afficher le panneau";
+    const srLabel = toggle.querySelector<HTMLElement>("[data-toggle-label]");
+    const tip = toggle.querySelector<HTMLElement>("[data-toggle-tooltip]");
+
+    toggle.addEventListener("click", () => {
+      const isOpen = panel.dataset.state === "open";
+      panel.dataset.state = isOpen ? "closed" : "open";
+      toggle.setAttribute("aria-expanded", String(!isOpen));
+      const nextLabel = isOpen ? labelClosed : labelOpen;
+      toggle.setAttribute("aria-label", nextLabel);
+      if (srLabel) srLabel.textContent = nextLabel;
+      if (tip) tip.textContent = nextLabel;
+      if (isOpen) panel.setAttribute("inert", "");
+      else panel.removeAttribute("inert");
+    });
+  }
+</script>
