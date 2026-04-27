@@ -79,3 +79,57 @@ function save(state: PersistedState): void {
     console.warn("[storage] write failed", err);
   }
 }
+
+let current: PersistedState | null = null;
+let saveTimer: number | null = null;
+const DEBOUNCE_MS = 300;
+
+export function bootstrap(defaults: PersistedState): {
+  state: PersistedState;
+  restored: boolean;
+} {
+  const loaded = load();
+  if (loaded) {
+    current = loaded;
+    return { state: loaded, restored: true };
+  }
+  current = defaults;
+  return { state: defaults, restored: false };
+}
+
+export function getCurrent(): PersistedState {
+  if (current === null) {
+    throw new Error("[storage] getCurrent called before bootstrap");
+  }
+  return current;
+}
+
+export function update(patch: Partial<Omit<PersistedState, "version">>): void {
+  if (current === null) {
+    throw new Error("[storage] update called before bootstrap");
+  }
+  current = {
+    ...current,
+    ...patch,
+    version: SCHEMA_VERSION,
+    savedAt: new Date().toISOString(),
+  };
+  scheduleSave();
+}
+
+export function saveNow(): void {
+  if (current === null) return;
+  if (saveTimer !== null) {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+  }
+  save(current);
+}
+
+function scheduleSave(): void {
+  if (saveTimer !== null) clearTimeout(saveTimer);
+  saveTimer = window.setTimeout(() => {
+    saveTimer = null;
+    if (current !== null) save(current);
+  }, DEBOUNCE_MS);
+}
