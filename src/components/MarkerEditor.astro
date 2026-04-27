@@ -3,8 +3,11 @@ import Button from "./ui/Button.astro";
 import {
   MARKER_SHAPES,
   MARKER_COLORS,
+  MARKER_ICONS,
   type MarkerShape,
+  type MarkerColor,
 } from "../data/markers";
+import { buildIconSvg } from "../data/marker-icons";
 
 const shapeLabels: Record<MarkerShape, string> = {
   square: "Carré",
@@ -79,6 +82,56 @@ const shapeLabels: Record<MarkerShape, string> = {
       </div>
     </fieldset>
 
+    <fieldset class="flex flex-col gap-2">
+      <legend class="font-mono text-xs font-semibold tracking-wider text-fg-secondary uppercase">
+        Contenu
+      </legend>
+      <div class="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Type de contenu">
+        {
+          (["none", "text", "icon"] as const).map((kind) => (
+            <button
+              type="button"
+              role="radio"
+              aria-checked="false"
+              data-field="content-kind"
+              data-value={kind}
+              class="rounded-sm border border-line-default bg-transparent px-3 py-2 text-sm text-fg-secondary transition-colors hover:bg-surface-elevated hover:text-fg-primary aria-checked:border-accent aria-checked:bg-surface-elevated aria-checked:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              {kind === "none" ? "Aucun" : kind === "text" ? "Texte" : "Icône"}
+            </button>
+          ))
+        }
+      </div>
+
+      <div data-content-text class="flex flex-col gap-2" hidden>
+        <input
+          type="text"
+          data-field="content-text"
+          maxlength="3"
+          class="w-full rounded-sm border border-line-default bg-surface-base px-3 py-2 text-sm text-fg-primary uppercase placeholder:text-fg-muted focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          placeholder="LZ"
+          aria-label="Contenu texte (1 à 3 caractères)"
+        />
+      </div>
+
+      <div data-content-icon class="grid grid-cols-4 gap-2" role="radiogroup" aria-label="Choix d'icône" hidden>
+        {
+          MARKER_ICONS.map((icon) => (
+            <button
+              type="button"
+              role="radio"
+              aria-checked="false"
+              data-field="content-icon"
+              data-value={icon}
+              aria-label={icon}
+              class="grid h-10 place-items-center rounded-sm border border-line-default bg-transparent text-fg-secondary transition-colors hover:bg-surface-elevated hover:text-fg-primary aria-checked:border-accent aria-checked:bg-surface-elevated aria-checked:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              set:html={buildIconSvg(icon, "size-5")}
+            />
+          ))
+        }
+      </div>
+    </fieldset>
+
     <div class="flex flex-col gap-2">
       <label
         for="marker-label"
@@ -107,7 +160,7 @@ const shapeLabels: Record<MarkerShape, string> = {
     updateSelected,
     selectMarker,
   } from "../lib/markers-store";
-  import type { MarkerColor, MarkerShape } from "../data/markers";
+  import type { MarkerColor, MarkerContent, MarkerIconId, MarkerShape } from "../data/markers";
 
   const root = document.querySelector<HTMLElement>("[data-marker-editor]");
   if (!root) {
@@ -130,6 +183,17 @@ const shapeLabels: Record<MarkerShape, string> = {
     );
     const colorBtns = root.querySelectorAll<HTMLButtonElement>(
       'button[data-field="color"]',
+    );
+    const contentKindBtns = root.querySelectorAll<HTMLButtonElement>(
+      'button[data-field="content-kind"]',
+    );
+    const contentTextWrap = root.querySelector<HTMLElement>("[data-content-text]")!;
+    const contentIconWrap = root.querySelector<HTMLElement>("[data-content-icon]")!;
+    const contentTextInput = root.querySelector<HTMLInputElement>(
+      'input[data-field="content-text"]',
+    )!;
+    const contentIconBtns = root.querySelectorAll<HTMLButtonElement>(
+      'button[data-field="content-icon"]',
     );
 
     startBtn.addEventListener("click", () => setMode("placing"));
@@ -155,6 +219,48 @@ const shapeLabels: Record<MarkerShape, string> = {
         const { selectedId } = getState();
         if (selectedId) updateSelected({ color: value });
         else updateDraft({ color: value });
+      });
+    }
+
+    for (const btn of contentKindBtns) {
+      btn.addEventListener("click", () => {
+        const kind = btn.dataset.value as MarkerContent["kind"];
+        let content: MarkerContent;
+        const { selectedId, draft, markers } = getState();
+        const source = selectedId ? markers.find((m) => m.id === selectedId) : draft;
+        if (kind === "none") {
+          content = { kind: "none" };
+        } else if (kind === "text") {
+          const value =
+            source && source.content.kind === "text" ? source.content.value : "";
+          content = { kind: "text", value };
+        } else {
+          const value =
+            source && source.content.kind === "icon"
+              ? source.content.value
+              : "flag";
+          content = { kind: "icon", value };
+        }
+        if (selectedId) updateSelected({ content });
+        else updateDraft({ content });
+      });
+    }
+
+    contentTextInput.addEventListener("input", () => {
+      const value = contentTextInput.value.slice(0, 3);
+      const content: MarkerContent = { kind: "text", value };
+      const { selectedId } = getState();
+      if (selectedId) updateSelected({ content });
+      else updateDraft({ content });
+    });
+
+    for (const btn of contentIconBtns) {
+      btn.addEventListener("click", () => {
+        const value = btn.dataset.value as MarkerIconId;
+        const content: MarkerContent = { kind: "icon", value };
+        const { selectedId } = getState();
+        if (selectedId) updateSelected({ content });
+        else updateDraft({ content });
       });
     }
 
@@ -200,6 +306,28 @@ const shapeLabels: Record<MarkerShape, string> = {
       const labelValue = data.label ?? "";
       if (labelInput.value !== labelValue) {
         labelInput.value = labelValue;
+      }
+
+      // Reflect content kind + sub-controls
+      const kind = data.content.kind;
+      for (const btn of contentKindBtns) {
+        btn.setAttribute("aria-checked", String(btn.dataset.value === kind));
+      }
+      contentTextWrap.hidden = kind !== "text";
+      contentIconWrap.hidden = kind !== "icon";
+
+      if (kind === "text") {
+        if (contentTextInput.value !== data.content.value) {
+          contentTextInput.value = data.content.value;
+        }
+      }
+      if (kind === "icon") {
+        for (const btn of contentIconBtns) {
+          btn.setAttribute(
+            "aria-checked",
+            String(btn.dataset.value === data.content.value),
+          );
+        }
       }
     }
 
