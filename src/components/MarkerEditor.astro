@@ -285,6 +285,21 @@ const shapeLabels: Record<MarkerShape, string> = {
       deleteSelected();
     });
 
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return;
+      // Don't swallow Escape if the user is inside a real input (let them clear it natively)
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) {
+        return;
+      }
+      const { mode, selectedId } = getState();
+      if (mode === "placing") {
+        setMode("idle");
+      } else if (selectedId) {
+        selectMarker(null);
+      }
+    });
+
     function render(): void {
       const state = getState();
       const showIdle = state.mode === "idle" && state.selectedId === null;
