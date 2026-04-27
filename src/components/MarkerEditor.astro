@@ -148,6 +148,12 @@ const shapeLabels: Record<MarkerShape, string> = {
         placeholder="MIKE 4"
       />
     </div>
+
+    <div data-delete-wrap hidden class="border-t border-line-subtle pt-4">
+      <Button variant="ghost" size="sm" class="w-full text-danger hover:bg-surface-elevated" data-action="delete">
+        Supprimer ce marqueur
+      </Button>
+    </div>
   </div>
 </div>
 
@@ -159,6 +165,7 @@ const shapeLabels: Record<MarkerShape, string> = {
     updateDraft,
     updateSelected,
     selectMarker,
+    deleteSelected,
   } from "../lib/markers-store";
   import type { MarkerColor, MarkerContent, MarkerIconId, MarkerShape } from "../data/markers";
 
@@ -195,6 +202,10 @@ const shapeLabels: Record<MarkerShape, string> = {
     const contentIconBtns = root.querySelectorAll<HTMLButtonElement>(
       'button[data-field="content-icon"]',
     );
+    const deleteWrap = root.querySelector<HTMLElement>("[data-delete-wrap]")!;
+    const deleteBtn = root.querySelector<HTMLButtonElement>(
+      'button[data-action="delete"]',
+    )!;
 
     startBtn.addEventListener("click", () => setMode("placing"));
 
@@ -270,11 +281,16 @@ const shapeLabels: Record<MarkerShape, string> = {
       else updateDraft({ label: labelInput.value });
     });
 
+    deleteBtn.addEventListener("click", () => {
+      deleteSelected();
+    });
+
     function render(): void {
       const state = getState();
       const showIdle = state.mode === "idle" && state.selectedId === null;
       idle.hidden = !showIdle;
       form.hidden = showIdle;
+      deleteWrap.hidden = !state.selectedId;
 
       if (showIdle) return;
 
