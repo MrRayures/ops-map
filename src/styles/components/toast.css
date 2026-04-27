@@ -1,0 +1,31 @@
+/* src/styles/components/toast.css */
+.c-toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  translate: -50% 0;
+  padding: 0.5rem 1rem;
+  background: var(--color-surface-elevated);
+  color: var(--color-fg-primary);
+  border: 1px solid var(--color-line-default);
+  border-radius: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  z-index: 1000;
+  animation: toast-in 200ms ease-out;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    translate: -50% 0.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .c-toast {
+    animation: none;
+  }
+}
