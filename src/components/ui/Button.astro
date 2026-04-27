@@ -10,6 +10,7 @@ interface Props {
   disabled?: boolean;
   class?: string;
   "aria-label"?: string;
+  [key: `data-${string}`]: string | number | boolean | undefined;
 }
 
 const {
@@ -20,6 +21,7 @@ const {
   disabled,
   class: extraClass,
   "aria-label": ariaLabel,
+  ...rest
 } = Astro.props;
 
 const base =
@@ -45,11 +47,11 @@ const classes = [base, variantClass[variant], sizeClass[size], extraClass]
 
 {
   href ? (
-    <a class={classes} href={href} aria-label={ariaLabel}>
+    <a class={classes} href={href} aria-label={ariaLabel} {...rest}>
       <slot />
     </a>
   ) : (
-    <button class={classes} type={type} disabled={disabled} aria-label={ariaLabel}>
+    <button class={classes} type={type} disabled={disabled} aria-label={ariaLabel} {...rest}>
       <slot />
     </button>
   )
