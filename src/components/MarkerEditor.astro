@@ -108,9 +108,9 @@ const colorLabels: Record<MarkerColor, string> = {
       <legend class="font-mono text-xs font-semibold tracking-wider text-fg-secondary uppercase">
         Contenu
       </legend>
-      <div class="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Type de contenu">
+      <div class="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Type de contenu">
         {
-          (["none", "text", "icon"] as const).map((kind) => (
+          (["text", "icon"] as const).map((kind) => (
             <button
               type="button"
               role="radio"
@@ -119,7 +119,7 @@ const colorLabels: Record<MarkerColor, string> = {
               data-value={kind}
               class="rounded-sm border border-line-default bg-transparent px-3 py-2 text-sm text-fg-secondary transition-colors hover:bg-surface-elevated hover:text-fg-primary aria-checked:border-accent aria-checked:bg-surface-elevated aria-checked:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
-              {kind === "none" ? "Aucun" : kind === "text" ? "Texte" : "Icône"}
+              {kind === "text" ? "Texte" : "Icône"}
             </button>
           ))
         }
@@ -171,6 +171,10 @@ const colorLabels: Record<MarkerColor, string> = {
       />
     </div>
 
+    <Button variant="primary" size="md" class="w-full" data-action="finish">
+      Valider
+    </Button>
+
     <div data-delete-wrap hidden class="border-t border-line-subtle pt-4">
       <Button variant="ghost" size="sm" class="w-full text-danger hover:bg-surface-elevated" data-action="delete">
         Supprimer ce marqueur
@@ -180,16 +184,16 @@ const colorLabels: Record<MarkerColor, string> = {
 </div>
 
 <script>
-  import {
-    setMode,
-    subscribe,
-    getState,
-    updateDraft,
-    updateSelected,
-    selectMarker,
-    deleteSelected,
-  } from "../lib/markers-store";
   import type { MarkerColor, MarkerContent, MarkerIconId, MarkerShape } from "../data/markers";
+import {
+deleteSelected,
+getState,
+selectMarker,
+setMode,
+subscribe,
+updateDraft,
+updateSelected,
+} from "../lib/markers-store";
 
   const root = document.querySelector<HTMLElement>("[data-marker-editor]");
   if (!root) {
@@ -203,6 +207,9 @@ const colorLabels: Record<MarkerColor, string> = {
     )!;
     const cancelBtn = root.querySelector<HTMLButtonElement>(
       'button[data-action="cancel-or-deselect"]',
+    )!;
+    const finishBtn = root.querySelector<HTMLButtonElement>(
+      'button[data-action="finish"]',
     )!;
     const labelInput = root.querySelector<HTMLInputElement>(
       'input[data-field="label"]',
@@ -231,11 +238,14 @@ const colorLabels: Record<MarkerColor, string> = {
 
     startBtn.addEventListener("click", () => setMode("placing"));
 
-    cancelBtn.addEventListener("click", () => {
+    function closeEditor(): void {
       const { mode, selectedId } = getState();
       if (mode === "placing") setMode("idle");
       else if (selectedId) selectMarker(null);
-    });
+    }
+
+    cancelBtn.addEventListener("click", closeEditor);
+    finishBtn.addEventListener("click", closeEditor);
 
     for (const btn of shapeBtns) {
       btn.addEventListener("click", () => {
@@ -261,9 +271,7 @@ const colorLabels: Record<MarkerColor, string> = {
         let content: MarkerContent;
         const { selectedId, draft, markers } = getState();
         const source = selectedId ? markers.find((m) => m.id === selectedId) : draft;
-        if (kind === "none") {
-          content = { kind: "none" };
-        } else if (kind === "text") {
+        if (kind === "text") {
           const value =
             source && source.content.kind === "text" ? source.content.value : "";
           content = { kind: "text", value };

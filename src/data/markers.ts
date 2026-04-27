@@ -21,7 +21,6 @@ export type MarkerIconId =
   | "package";
 
 export type MarkerContent =
-  | { kind: "none" }
   | { kind: "text"; value: string }
   | { kind: "icon"; value: MarkerIconId };
 
@@ -69,7 +68,7 @@ export const MARKER_ICONS: readonly MarkerIconId[] = [
 export const DEFAULT_MARKER_DRAFT: MarkerDraft = {
   shape: "square",
   color: "team-red",
-  content: { kind: "none" },
+  content: { kind: "text", value: "" },
   label: "",
 };
 

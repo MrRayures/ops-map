@@ -20,7 +20,7 @@ const { bounds = FRANCE_BOUNDS, center, zoom, ariaLabel = "Carte satellite inter
 
 <div
   id="map"
-  class="h-full w-full"
+  class="c-map h-full w-full"
   role="region"
   aria-label={ariaLabel}
   data-bounds={center && zoom !== undefined ? undefined : JSON.stringify(bounds)}
@@ -30,15 +30,15 @@ const { bounds = FRANCE_BOUNDS, center, zoom, ariaLabel = "Carte satellite inter
 
 <script>
   import L from "leaflet";
-  import "leaflet/dist/leaflet.css";
-  import { mapStyles, defaultMapStyle, type MapStyleId } from "../data/map-styles";
-  import {
-    subscribe as subscribeMarkers,
-    getState as getMarkersState,
-    createMarker,
-    selectMarker,
-  } from "../lib/markers-store";
-  import { setLeafletMap } from "../lib/leaflet-map-ref";
+import "leaflet/dist/leaflet.css";
+import { defaultMapStyle, mapStyles, type MapStyleId } from "../data/map-styles";
+import { setLeafletMap } from "../lib/leaflet-map-ref";
+import {
+createMarker,
+getState as getMarkersState,
+selectMarker,
+subscribe as subscribeMarkers,
+} from "../lib/markers-store";
 
   const container = document.getElementById("map");
   if (container) {

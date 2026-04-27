@@ -1,9 +1,43 @@
 ---
-import "../styles/global.css";
+import Pencil from "@lucide/astro/icons/pencil";
+import Check from "@lucide/astro/icons/check";
 import Map from "../components/Map.astro";
-import Sidebar from "../components/Sidebar.astro";
-import PanelGroup from "../components/PanelGroup.astro";
 import MarkerLayer from "../components/MarkerLayer.astro";
+import PanelGroup from "../components/PanelGroup.astro";
+import Sidebar from "../components/Sidebar.astro";
+import "../styles/global.css";
+
+const OP_ADJECTIVES = [
+  "DARK",
+  "SILENT",
+  "RAPID",
+  "SHADOW",
+  "IRON",
+  "CRIMSON",
+  "BLACK",
+  "GHOST",
+  "STEEL",
+  "ARCTIC",
+] as const;
+
+const OP_NOUNS = [
+  "FALCON",
+  "VIPER",
+  "RAVEN",
+  "WOLF",
+  "TALON",
+  "STORM",
+  "BLADE",
+  "EAGLE",
+  "HORNET",
+  "TIGER",
+] as const;
+
+function pick<T>(arr: readonly T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)]!;
+}
+
+const operationName = `OPERATION ${pick(OP_ADJECTIVES)} ${pick(OP_NOUNS)}`;
 ---
 
 <html lang="fr">
@@ -18,11 +52,92 @@ import MarkerLayer from "../components/MarkerLayer.astro";
 	<body class="flex h-dvh overflow-hidden bg-surface-base text-fg-primary">
 		<Sidebar />
 		<PanelGroup />
-		<main class="c-corner-brackets relative flex-1">
-			<span class="c-corner-brackets-bl" aria-hidden="true"></span>
-			<span class="c-corner-brackets-br" aria-hidden="true"></span>
+		<main class="c-map__wrapper relative flex-1">
+			<div class="c-map__ui">
+				<header class="c-header">
+					<div class="c-header__main">
+						<label for="op-title" class="sr-only">Nom de l'opération</label>
+						<div class="c-header__title">
+							<span data-title-text class="c-header__title-text">{operationName}</span>
+							<input
+								id="op-title"
+								type="text"
+								class="c-header__title-input"
+								value={operationName}
+								autocomplete="off"
+								spellcheck="false"
+								hidden
+							/>
+							<button
+								type="button"
+								data-action="edit-title"
+								class="c-header__title-btn"
+								aria-label="Modifier le nom"
+							>
+								<Pencil size={14} aria-hidden="true" />
+							</button>
+							<button
+								type="button"
+								data-action="validate-title"
+								class="c-header__title-btn"
+								aria-label="Valider le nom"
+								hidden
+							>
+								<Check size={14} aria-hidden="true" />
+							</button>
+						</div>
+					</div>
+					<div class="c-header__actions">
+						Actions
+					</div>
+				</header>
+			</div>
 			<Map />
 			<MarkerLayer />
 		</main>
 	</body>
 </html>
+
+<script>
+	const titleText = document.querySelector<HTMLElement>("[data-title-text]");
+	const titleInput = document.querySelector<HTMLInputElement>("#op-title");
+	const editBtn = document.querySelector<HTMLButtonElement>(
+		'button[data-action="edit-title"]',
+	);
+	const validateBtn = document.querySelector<HTMLButtonElement>(
+		'button[data-action="validate-title"]',
+	);
+
+	if (titleText && titleInput && editBtn && validateBtn) {
+		const enterEditMode = (): void => {
+			titleInput.value = titleText.textContent ?? "";
+			titleText.hidden = true;
+			editBtn.hidden = true;
+			titleInput.hidden = false;
+			validateBtn.hidden = false;
+			titleInput.focus();
+			titleInput.select();
+		};
+
+		const exitEditMode = (): void => {
+			titleText.textContent = titleInput.value;
+			titleInput.hidden = true;
+			validateBtn.hidden = true;
+			titleText.hidden = false;
+			editBtn.hidden = false;
+			editBtn.focus();
+		};
+
+		editBtn.addEventListener("click", enterEditMode);
+		validateBtn.addEventListener("click", exitEditMode);
+		titleInput.addEventListener("keydown", (e) => {
+			if (e.key === "Enter") {
+				e.preventDefault();
+				exitEditMode();
+			} else if (e.key === "Escape") {
+				titleInput.value = titleText.textContent ?? "";
+				exitEditMode();
+			}
+		});
+	}
+</script>

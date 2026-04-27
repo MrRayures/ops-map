@@ -1,0 +1,31 @@
+.c-map {
+  /*filter: brightness(1.3) invert(0.17) saturate(2.6) sepia(0.25);*/
+
+  /* Hide leafLet attribution & zoom */
+  .leaflet-control-zoom,
+  .leaflet-control-attribution {
+    display: none;
+  }
+}
+
+.c-map__wrapper {
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 999;
+    box-shadow: inset 0 0 0 var(--mapWrapperPadding) rgba(0, 0, 0, 0.6);
+    pointer-events: none;
+  }
+}
+
+.c-map__ui {
+  border: 1px solid var(--mapBorder);
+  position: absolute;
+  z-index: 999;
+  pointer-events: none;
+  top: var(--mapWrapperPadding);
+  left: var(--mapWrapperPadding);
+  right: var(--mapWrapperPadding);
+  bottom: var(--mapWrapperPadding);
+}

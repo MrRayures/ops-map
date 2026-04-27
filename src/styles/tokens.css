@@ -51,3 +51,8 @@
   --font-mono:
     "JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
+
+:root {
+  --mapWrapperPadding: 0.5rem;
+  --mapBorder: rgba(255, 255, 255, 0.2);
+}

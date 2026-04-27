@@ -11,6 +11,7 @@
   width: var(--bracket-size);
   height: var(--bracket-size);
   pointer-events: none;
+  z-index: 9999;
 }
 
 .c-corner-brackets::before {
