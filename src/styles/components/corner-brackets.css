@@ -1,0 +1,50 @@
+.c-corner-brackets {
+  position: relative;
+}
+
+.c-corner-brackets::before,
+.c-corner-brackets::after,
+.c-corner-brackets > .c-corner-brackets-bl,
+.c-corner-brackets > .c-corner-brackets-br {
+  content: "";
+  position: absolute;
+  width: var(--bracket-size);
+  height: var(--bracket-size);
+  pointer-events: none;
+}
+
+.c-corner-brackets::before {
+  top: var(--bracket-offset);
+  left: var(--bracket-offset);
+  border-top: var(--bracket-thickness) solid var(--bracket-color);
+  border-left: var(--bracket-thickness) solid var(--bracket-color);
+}
+
+.c-corner-brackets::after {
+  top: var(--bracket-offset);
+  right: var(--bracket-offset);
+  border-top: var(--bracket-thickness) solid var(--bracket-color);
+  border-right: var(--bracket-thickness) solid var(--bracket-color);
+}
+
+.c-corner-brackets > .c-corner-brackets-bl {
+  bottom: var(--bracket-offset);
+  left: var(--bracket-offset);
+  border-bottom: var(--bracket-thickness) solid var(--bracket-color);
+  border-left: var(--bracket-thickness) solid var(--bracket-color);
+}
+
+.c-corner-brackets > .c-corner-brackets-br {
+  bottom: var(--bracket-offset);
+  right: var(--bracket-offset);
+  border-bottom: var(--bracket-thickness) solid var(--bracket-color);
+  border-right: var(--bracket-thickness) solid var(--bracket-color);
+}
+
+.c-corner-brackets.is-active::before,
+.c-corner-brackets.is-active::after,
+.c-corner-brackets.is-active > .c-corner-brackets-bl,
+.c-corner-brackets.is-active > .c-corner-brackets-br {
+  border-width: calc(var(--bracket-thickness) * 1.5);
+  filter: drop-shadow(var(--shadow-glow-accent));
+}
