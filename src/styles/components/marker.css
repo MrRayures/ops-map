@@ -1,0 +1,98 @@
+.c-marker {
+  font-family: var(--font-mono);
+  position: relative;
+}
+
+.c-marker-body {
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--color-team-stroke);
+  display: grid;
+  place-items: center;
+  color: var(--color-fg-primary);
+  font-weight: 600;
+  font-size: 12px;
+}
+
+/* Forme */
+.c-marker.is-shape-square .c-marker-body {
+  border-radius: var(--radius-sm);
+}
+.c-marker.is-shape-circle .c-marker-body {
+  border-radius: 50%;
+}
+.c-marker.is-shape-triangle .c-marker-body {
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+.c-marker.is-shape-diamond .c-marker-body {
+  transform: rotate(45deg);
+}
+.c-marker.is-shape-diamond > .c-marker-body > * {
+  transform: rotate(-45deg);
+}
+
+/* Couleur */
+.c-marker.is-color-team-red .c-marker-body {
+  background: var(--color-team-red);
+}
+.c-marker.is-color-team-blue .c-marker-body {
+  background: var(--color-team-blue);
+}
+.c-marker.is-color-team-green .c-marker-body {
+  background: var(--color-team-green);
+}
+.c-marker.is-color-team-purple .c-marker-body {
+  background: var(--color-team-purple);
+}
+.c-marker.is-color-marker-objective .c-marker-body {
+  background: var(--color-marker-objective);
+}
+.c-marker.is-color-marker-spawn .c-marker-body {
+  background: var(--color-marker-spawn);
+}
+.c-marker.is-color-marker-danger .c-marker-body {
+  background: var(--color-marker-danger);
+}
+.c-marker.is-color-marker-cover .c-marker-body {
+  background: var(--color-marker-cover);
+}
+
+/* Sélection — l'outline reste rectangulaire pour les 4 formes
+   (CSS outline ne suit pas clip-path/transform). Trade-off accepté
+   pour cette itération. */
+.c-marker.is-selected .c-marker-body {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Icône */
+.c-marker-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-fg-primary);
+}
+
+/* Label HUD */
+.c-marker-label {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 4px;
+  background: var(--color-surface-elevated);
+  color: var(--color-fg-primary);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  white-space: nowrap;
+  border: 1px solid var(--color-line-default);
+  pointer-events: none;
+}
+
+/* Place mode cursor (appliqué sur #map) */
+.leaflet-container.is-placing,
+.leaflet-container.is-placing .leaflet-grab,
+.leaflet-container.is-placing .leaflet-interactive {
+  cursor: crosshair !important;
+}
