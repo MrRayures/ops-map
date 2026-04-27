@@ -1,0 +1,120 @@
+---
+// MarkerLayer is a side-effect component: it has no DOM of its own.
+// It listens to map:ready, builds a Leaflet layer group, then
+// subscribes to the markers store and syncs the layer group with the
+// store state via a diff-based update.
+---
+
+<script>
+  import L from "leaflet";
+  import {
+    subscribe,
+    getState,
+    selectMarker,
+    moveSelected,
+  } from "../lib/markers-store";
+  import type { Marker } from "../data/markers";
+  import { buildIconSvg } from "../data/marker-icons";
+
+  type MapReadyDetail = { map: L.Map; container: HTMLElement };
+
+  function buildMarkerHtml(m: Marker, isSelected: boolean): string {
+    const classes = [
+      "c-marker",
+      `is-shape-${m.shape}`,
+      `is-color-${m.color}`,
+      isSelected ? "is-selected" : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    let bodyContent = "";
+    if (m.content.kind === "text") {
+      const safe = m.content.value
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+      bodyContent = `<span class="c-marker-text">${safe}</span>`;
+    } else if (m.content.kind === "icon") {
+      bodyContent = buildIconSvg(m.content.value);
+    }
+
+    const label = m.label?.trim()
+      ? `<div class="c-marker-label">${m.label
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")}</div>`
+      : "";
+
+    return `<div class="${classes}" data-id="${m.id}"><div class="c-marker-body">${bodyContent}</div>${label}</div>`;
+  }
+
+  function buildIcon(m: Marker, isSelected: boolean): L.DivIcon {
+    return L.divIcon({
+      html: buildMarkerHtml(m, isSelected),
+      className: "",
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
+    });
+  }
+
+  window.addEventListener("map:ready", (event) => {
+    const { map } = (event as CustomEvent<MapReadyDetail>).detail;
+    const group = L.layerGroup().addTo(map);
+    const layerById = new Map<string, L.Marker>();
+
+    function attachHandlers(id: string, leafletMarker: L.Marker): void {
+      leafletMarker.on("click", (e) => {
+        L.DomEvent.stopPropagation(e);
+        selectMarker(id);
+      });
+      leafletMarker.on("dragstart", () => {
+        selectMarker(id);
+      });
+      leafletMarker.on("dragend", (e) => {
+        const target = e.target as L.Marker;
+        const ll = target.getLatLng();
+        moveSelected(ll.lat, ll.lng);
+      });
+    }
+
+    function sync(): void {
+      const state = getState();
+      const desiredIds = new Set(state.markers.map((m) => m.id));
+
+      // Remove markers no longer in state
+      for (const [id, lm] of layerById) {
+        if (!desiredIds.has(id)) {
+          group.removeLayer(lm);
+          layerById.delete(id);
+        }
+      }
+
+      // Add or update remaining markers
+      for (const m of state.markers) {
+        const isSelected = state.selectedId === m.id;
+        const existing = layerById.get(m.id);
+        if (!existing) {
+          const lm = L.marker([m.lat, m.lng], {
+            icon: buildIcon(m, isSelected),
+            draggable: true,
+          });
+          attachHandlers(m.id, lm);
+          group.addLayer(lm);
+          layerById.set(m.id, lm);
+        } else {
+          // Update lat/lng if changed
+          const ll = existing.getLatLng();
+          if (ll.lat !== m.lat || ll.lng !== m.lng) {
+            existing.setLatLng([m.lat, m.lng]);
+          }
+          // Replace icon (covers shape/color/content/label/selection changes)
+          existing.setIcon(buildIcon(m, isSelected));
+        }
+      }
+    }
+
+    sync();
+    subscribe(sync);
+  });
+</script>
