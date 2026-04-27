@@ -1,8 +1,8 @@
 ---
 // MarkerLayer is a side-effect component: it has no DOM of its own.
-// It listens to map:ready, builds a Leaflet layer group, then
-// subscribes to the markers store and syncs the layer group with the
-// store state via a diff-based update.
+// It waits for the Leaflet map (via whenMapReady), builds a layer
+// group, then subscribes to the markers store and syncs the layer
+// group with the store state via a diff-based update.
 ---
 
 <script>
@@ -13,10 +13,9 @@
     selectMarker,
     moveSelected,
   } from "../lib/markers-store";
+  import { whenMapReady } from "../lib/leaflet-map-ref";
   import type { Marker } from "../data/markers";
   import { buildIconSvg } from "../data/marker-icons";
-
-  type MapReadyDetail = { map: L.Map; container: HTMLElement };
 
   function buildMarkerHtml(m: Marker, isSelected: boolean): string {
     const classes = [
@@ -58,8 +57,7 @@
     });
   }
 
-  window.addEventListener("map:ready", (event) => {
-    const { map } = (event as CustomEvent<MapReadyDetail>).detail;
+  whenMapReady((map) => {
     const group = L.layerGroup().addTo(map);
     const layerById = new Map<string, L.Marker>();
 

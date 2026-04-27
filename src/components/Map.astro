@@ -38,16 +38,13 @@ const { bounds = FRANCE_BOUNDS, center, zoom, ariaLabel = "Carte satellite inter
     createMarker,
     selectMarker,
   } from "../lib/markers-store";
+  import { setLeafletMap } from "../lib/leaflet-map-ref";
 
   const container = document.getElementById("map");
   if (container) {
     const map = L.map(container);
 
-    window.dispatchEvent(
-      new CustomEvent<{ map: L.Map; container: HTMLElement }>("map:ready", {
-        detail: { map, container },
-      }),
-    );
+    setLeafletMap(map);
 
     const buildLayers = (id: MapStyleId): L.TileLayer[] => {
       const style = mapStyles.find((s) => s.id === id) ?? mapStyles[0];
