@@ -222,7 +222,7 @@ const swatchGroups = [
       <section class="border-t border-line-subtle py-10" aria-labelledby="sec-cards">
         <h2 id="sec-cards" class="mb-6 text-xl font-semibold">D. Cards</h2>
 
-        <div class="grid gap-4 lg:grid-cols-3">
+        <div class="grid gap-4 lg:grid-cols-4">
           <Card>
             <p>Card minimale — fond surface-card, bordure line-default, radius-md.</p>
           </Card>
@@ -247,6 +247,20 @@ const swatchGroups = [
               Footer · métadonnées
             </span>
           </Card>
+
+          <div class="c-corner-brackets relative">
+            <span class="c-corner-brackets-bl" aria-hidden="true"></span>
+            <span class="c-corner-brackets-br" aria-hidden="true"></span>
+            <Card>
+              <h3 slot="header" class="text-sm font-semibold text-fg-primary">
+                Avec brackets HUD
+              </h3>
+              <p class="text-fg-secondary">
+                Équerres jaunes appliquées au parent via .c-corner-brackets + 2 spans
+                enfants pour les coins du bas.
+              </p>
+            </Card>
+          </div>
         </div>
       </section>
 
