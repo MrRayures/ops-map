@@ -36,6 +36,7 @@ const { bounds = FRANCE_BOUNDS, center, zoom, ariaLabel = "Carte satellite inter
     subscribe as subscribeMarkers,
     getState as getMarkersState,
     createMarker,
+    selectMarker,
   } from "../lib/markers-store";
 
   const container = document.getElementById("map");
@@ -99,9 +100,14 @@ const { bounds = FRANCE_BOUNDS, center, zoom, ariaLabel = "Carte satellite inter
     subscribeMarkers(applyPlacingClass);
 
     map.on("click", (e) => {
-      const { mode, draft } = getMarkersState();
-      if (mode !== "placing") return;
-      createMarker(e.latlng.lat, e.latlng.lng, draft);
+      const state = getMarkersState();
+      if (state.mode === "placing") {
+        createMarker(e.latlng.lat, e.latlng.lng, state.draft);
+        return;
+      }
+      if (state.selectedId !== null) {
+        selectMarker(null);
+      }
     });
   }
 </script>
