@@ -37,6 +37,12 @@ const { bounds = FRANCE_BOUNDS, center, zoom, ariaLabel = "Carte satellite inter
   if (container) {
     const map = L.map(container);
 
+    window.dispatchEvent(
+      new CustomEvent<{ map: L.Map; container: HTMLElement }>("map:ready", {
+        detail: { map, container },
+      }),
+    );
+
     const buildLayers = (id: MapStyleId): L.TileLayer[] => {
       const style = mapStyles.find((s) => s.id === id) ?? mapStyles[0];
       const opts = { maxZoom: style.maxZoom, attribution: style.attribution };
