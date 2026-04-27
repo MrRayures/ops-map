@@ -1,0 +1,41 @@
+.c-pin {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--color-team-stroke);
+  background: transparent;
+}
+
+.c-pin.is-team-red {
+  background: var(--color-team-red);
+}
+
+.c-pin.is-team-blue {
+  background: var(--color-team-blue);
+}
+
+.c-pin.is-team-green {
+  background: var(--color-team-green);
+}
+
+.c-pin.is-team-purple {
+  background: var(--color-team-purple);
+}
+
+.c-pin.is-objective {
+  background: var(--color-marker-objective);
+  box-shadow: var(--shadow-glow-objective);
+}
+
+.c-pin.is-spawn {
+  background: var(--color-marker-spawn);
+}
+
+.c-pin.is-danger {
+  background: var(--color-marker-danger);
+}
+
+.c-pin.is-cover {
+  background: var(--color-marker-cover);
+}
