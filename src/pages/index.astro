@@ -1,0 +1,26 @@
+---
+import "../styles/global.css";
+import Map from "../components/Map.astro";
+import Sidebar from "../components/Sidebar.astro";
+import PanelGroup from "../components/PanelGroup.astro";
+---
+
+<html lang="fr">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" href="/favicon.ico" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<title>ops-map</title>
+	</head>
+	<body class="flex h-dvh overflow-hidden bg-surface-base text-fg-primary">
+		<Sidebar />
+		<PanelGroup />
+		<main class="c-corner-brackets relative flex-1">
+			<span class="c-corner-brackets-bl" aria-hidden="true"></span>
+			<span class="c-corner-brackets-br" aria-hidden="true"></span>
+			<Map />
+		</main>
+	</body>
+</html>
