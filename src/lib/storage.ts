@@ -133,3 +133,54 @@ function scheduleSave(): void {
     if (current !== null) save(current);
   }, DEBOUNCE_MS);
 }
+
+function slugifyTitle(title: string): string {
+  const slug = title
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "") // strip combining diacritics
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return slug || "operation";
+}
+
+function todayIso(): string {
+  return new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+}
+
+export function exportToFile(): void {
+  if (current === null) {
+    throw new Error("[storage] exportToFile called before bootstrap");
+  }
+  const json = JSON.stringify(current, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `ops-map-${slugifyTitle(current.title)}-${todayIso()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+export function importFromFile(file: File): Promise<PersistedState> {
+  return file.text().then((text) => {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      throw new Error("Fichier invalide");
+    }
+    const migrated = migrate(parsed);
+    if (migrated === null) {
+      // Distinguish version mismatch from structural invalid
+      const version = (parsed as { version?: unknown } | null)?.version;
+      if (version !== undefined && version !== SCHEMA_VERSION) {
+        throw new Error("Version non supportée");
+      }
+      throw new Error("Fichier invalide");
+    }
+    return migrated;
+  });
+}
