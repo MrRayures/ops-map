@@ -39,6 +39,7 @@ getState as getMarkersState,
 selectMarker,
 subscribe as subscribeMarkers,
 } from "../lib/markers-store";
+import { update } from "../lib/storage";
 
   const container = document.getElementById("map");
   if (container) {
@@ -59,11 +60,25 @@ subscribe as subscribeMarkers,
     let layers = buildLayers(defaultMapStyle);
     for (const l of layers) l.addTo(map);
 
-    const { center, zoom, bounds } = container.dataset;
-    if (center && zoom) {
-      map.setView(JSON.parse(center) as [number, number], Number(zoom));
-    } else if (bounds) {
-      map.fitBounds(JSON.parse(bounds) as [[number, number], [number, number]]);
+    const initView = (): void => {
+      const boot = window.__opsMapBoot;
+      if (boot?.restored) {
+        map.setView(boot.view.center, boot.view.zoom);
+        return;
+      }
+      // No restored state — honor SSR-provided dataset (always set by Map.astro template)
+      const { center, zoom, bounds } = container.dataset;
+      if (center && zoom) {
+        map.setView(JSON.parse(center) as [number, number], Number(zoom));
+      } else if (bounds) {
+        map.fitBounds(JSON.parse(bounds) as [[number, number], [number, number]]);
+      }
+    };
+
+    if (window.__opsMapBoot) {
+      initView();
+    } else {
+      window.addEventListener("ops-map:boot", initView, { once: true });
     }
 
     new ResizeObserver(() => map.invalidateSize()).observe(container);
@@ -105,6 +120,11 @@ subscribe as subscribeMarkers,
       if (state.selectedId !== null) {
         selectMarker(null);
       }
+    });
+
+    map.on("moveend", () => {
+      const c = map.getCenter();
+      update({ view: { center: [c.lat, c.lng], zoom: map.getZoom() } });
     });
   }
 </script>
