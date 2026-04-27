@@ -101,15 +101,15 @@ const operationName = `OPERATION ${pick(OP_ADJECTIVES)} ${pick(OP_NOUNS)}`;
 </html>
 
 <script>
-	import {
-		bootstrap,
-		update,
-		saveNow,
-		exportToFile,
-		importFromFile,
-		type PersistedState,
-	} from "../lib/storage";
 	import { whenMapReady } from "../lib/leaflet-map-ref";
+import {
+bootstrap,
+exportToFile,
+importFromFile,
+saveNow,
+update,
+type PersistedState,
+} from "../lib/storage";
 
 	const titleText = document.querySelector<HTMLElement>("[data-title-text]");
 	const titleInput = document.querySelector<HTMLInputElement>("#op-title");

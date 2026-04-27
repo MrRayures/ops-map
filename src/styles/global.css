@@ -1,15 +1,16 @@
-@import "tailwindcss";
-@import "./tokens.css";
+@import 'tailwindcss';
+@import './tokens.css';
 
-@import "@fontsource-variable/inter";
-@import "@fontsource-variable/jetbrains-mono";
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/jetbrains-mono';
 
-@import "./primitives.css";
+@import './primitives.css';
 
-@import "./components/corner-brackets.css";
-@import "./components/grid-overlay.css";
-@import "./components/header.css";
-@import "./components/map.css";
-@import "./components/pin.css";
-@import "./components/marker.css";
-@import "./components/toast.css";
+@import './components/corner-brackets.css';
+@import './components/grid-overlay.css';
+@import './components/header.css';
+@import './components/map.css';
+@import './components/pin.css';
+@import './components/marker.css';
+@import './components/toast.css';
+@import './components/title.css';

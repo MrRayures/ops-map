@@ -1,4 +1,11 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(git -C \"c:/_Work/_Frontend/ops-map\" log --oneline d6cab55..6a34db4)",
+      "Bash(git -C \"c:/_Work/_Frontend/ops-map\" show --stat 6a34db4)",
+      "Bash(git -C \"c:/_Work/_Frontend/ops-map\" show 6a34db4 -- src/lib/storage.ts)"
+    ]
+  },
   "hooks": {
     "PostToolUse": [
       {

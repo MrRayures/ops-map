@@ -1,6 +1,6 @@
 ---
-import { panels, tabId, panelId } from "../data/panels";
-import { mapStyles, defaultMapStyle } from "../data/map-styles";
+import { defaultMapStyle, mapStyles } from "../data/map-styles";
+import { panelId, panels, tabId } from "../data/panels";
 import AddressSearch from "./AddressSearch.astro";
 import MarkerEditor from "./MarkerEditor.astro";
 
@@ -23,7 +23,7 @@ const defaultPanel = panels[0].id;
         hidden={panel.id !== defaultPanel}
         class="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto p-5 outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
       >
-        <h2 class="text-base font-semibold tracking-tight text-fg-primary">{panel.label}</h2>
+        <h2 class="c-title text-base font-semibold tracking-tight text-fg-primary"><span>{panel.label}</span></h2>
 
         {panel.id === "address" && <AddressSearch />}
 
