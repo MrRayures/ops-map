@@ -15,6 +15,28 @@ const shapeLabels: Record<MarkerShape, string> = {
   circle: "Cercle",
   diamond: "Losange",
 };
+
+const colorClass: Record<MarkerColor, string> = {
+  "team-red": "bg-team-red",
+  "team-blue": "bg-team-blue",
+  "team-green": "bg-team-green",
+  "team-purple": "bg-team-purple",
+  "marker-objective": "bg-marker-objective",
+  "marker-spawn": "bg-marker-spawn",
+  "marker-danger": "bg-marker-danger",
+  "marker-cover": "bg-marker-cover",
+};
+
+const colorLabels: Record<MarkerColor, string> = {
+  "team-red": "Équipe rouge",
+  "team-blue": "Équipe bleue",
+  "team-green": "Équipe verte",
+  "team-purple": "Équipe violette",
+  "marker-objective": "Objectif",
+  "marker-spawn": "Spawn",
+  "marker-danger": "Danger",
+  "marker-cover": "Couverture",
+};
 ---
 
 <div data-marker-editor>
@@ -26,7 +48,7 @@ const shapeLabels: Record<MarkerShape, string> = {
 
   <div data-marker-editor-form hidden class="flex flex-col gap-5">
     <div class="flex items-center justify-between">
-      <span data-form-status class="font-mono text-xs tracking-wider text-fg-secondary uppercase"
+      <span data-form-status aria-live="polite" class="font-mono text-xs tracking-wider text-fg-secondary uppercase"
       ></span>
       <Button variant="ghost" size="sm" data-action="cancel-or-deselect" aria-label="Fermer">
         ✕
@@ -71,10 +93,10 @@ const shapeLabels: Record<MarkerShape, string> = {
               aria-checked="false"
               data-field="color"
               data-value={color}
-              aria-label={color}
+              aria-label={colorLabels[color]}
               class:list={[
                 "h-10 rounded-sm border border-line-default transition-colors aria-checked:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
-                `bg-${color}`,
+                colorClass[color],
               ]}
             />
           ))
