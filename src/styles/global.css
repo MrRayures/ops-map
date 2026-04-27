@@ -9,3 +9,7 @@
 @import "./components/corner-brackets.css";
 @import "./components/grid-overlay.css";
 @import "./components/pin.css";
+
+#map {
+  //filter: brightness(1.3) invert(0.17) saturate(2.6) sepia(0.25);
+}

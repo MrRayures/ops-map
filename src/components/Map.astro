@@ -1,0 +1,82 @@
+---
+type LatLng = [number, number];
+type Bounds = [LatLng, LatLng];
+
+interface Props {
+  bounds?: Bounds;
+  center?: LatLng;
+  zoom?: number;
+  ariaLabel?: string;
+}
+
+const FRANCE_BOUNDS: Bounds = [
+  [41.3, -5.2],
+  [51.1, 9.6],
+];
+
+const { bounds = FRANCE_BOUNDS, center, zoom, ariaLabel = "Carte satellite interactive" } =
+  Astro.props;
+---
+
+<div
+  id="map"
+  class="h-full w-full"
+  role="region"
+  aria-label={ariaLabel}
+  data-bounds={center && zoom !== undefined ? undefined : JSON.stringify(bounds)}
+  data-center={center ? JSON.stringify(center) : undefined}
+  data-zoom={zoom !== undefined ? String(zoom) : undefined}
+></div>
+
+<script>
+  import L from "leaflet";
+  import "leaflet/dist/leaflet.css";
+  import { mapStyles, defaultMapStyle, type MapStyleId } from "../data/map-styles";
+
+  const container = document.getElementById("map");
+  if (container) {
+    const map = L.map(container);
+
+    const buildLayers = (id: MapStyleId): L.TileLayer[] => {
+      const style = mapStyles.find((s) => s.id === id) ?? mapStyles[0];
+      const opts = { maxZoom: style.maxZoom, attribution: style.attribution };
+      const layers = [L.tileLayer(style.url, opts)];
+      if ("overlayUrl" in style && style.overlayUrl) {
+        layers.push(L.tileLayer(style.overlayUrl, opts));
+      }
+      return layers;
+    };
+
+    let layers = buildLayers(defaultMapStyle);
+    for (const l of layers) l.addTo(map);
+
+    const { center, zoom, bounds } = container.dataset;
+    if (center && zoom) {
+      map.setView(JSON.parse(center) as [number, number], Number(zoom));
+    } else if (bounds) {
+      map.fitBounds(JSON.parse(bounds) as [[number, number], [number, number]]);
+    }
+
+    new ResizeObserver(() => map.invalidateSize()).observe(container);
+
+    const radios = document.querySelectorAll<HTMLInputElement>('input[name="map-style"]');
+    for (const radio of radios) {
+      radio.addEventListener("change", () => {
+        if (!radio.checked) return;
+        for (const l of layers) map.removeLayer(l);
+        layers = buildLayers(radio.value as MapStyleId);
+        for (const l of layers) l.addTo(map);
+      });
+    }
+
+    type FlyDetail = {
+      bounds?: [[number, number], [number, number]];
+      center?: [number, number];
+    };
+    window.addEventListener("map:fly", (event) => {
+      const { bounds, center } = (event as CustomEvent<FlyDetail>).detail;
+      if (bounds) map.flyToBounds(bounds, { duration: 0.8 });
+      else if (center) map.flyTo(center, 15, { duration: 0.8 });
+    });
+  }
+</script>

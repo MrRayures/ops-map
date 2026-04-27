@@ -1,0 +1,8 @@
+# Local developer settings (not shared)
+settings.local.json
+
+# Auto-generated memory (personal per dev)
+MEMORY.md
+
+# Temporary plan files
+plans/
