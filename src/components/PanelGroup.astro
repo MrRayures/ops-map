@@ -1,0 +1,51 @@
+---
+import { panels, tabId, panelId } from "../data/panels";
+import { mapStyles, defaultMapStyle } from "../data/map-styles";
+import AddressSearch from "./AddressSearch.astro";
+
+const defaultPanel = panels[0].id;
+---
+
+<section
+  id="panel-group"
+  data-state="open"
+  aria-label="Contenu du panneau actif"
+  class="flex h-full w-80 shrink-0 flex-col border-r border-line-default bg-surface-card text-fg-primary transition-[width] duration-200 ease-out data-[state=closed]:w-0 data-[state=closed]:overflow-hidden data-[state=closed]:border-r-transparent"
+>
+  {
+    panels.map((panel) => (
+      <article
+        id={panelId(panel.id)}
+        role="tabpanel"
+        aria-labelledby={tabId(panel.id)}
+        tabindex="0"
+        hidden={panel.id !== defaultPanel}
+        class="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto p-5 outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
+      >
+        <h2 class="text-base font-semibold tracking-tight text-fg-primary">{panel.label}</h2>
+
+        {panel.id === "address" && <AddressSearch />}
+
+        {panel.id === "settings" && (
+          <fieldset class="flex flex-col gap-2">
+            <legend class="mb-2 font-mono text-xs font-semibold tracking-wider text-fg-secondary uppercase">
+              Styles de carte
+            </legend>
+            {mapStyles.map((style) => (
+              <label class="flex cursor-pointer items-center gap-3 rounded-sm border border-line-default px-3 py-2 text-sm transition-colors has-[:checked]:border-accent has-[:checked]:bg-surface-elevated has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent">
+                <input
+                  type="radio"
+                  name="map-style"
+                  value={style.id}
+                  checked={style.id === defaultMapStyle}
+                  class="size-4 accent-[var(--color-accent)]"
+                />
+                <span class="text-fg-primary">{style.label}</span>
+              </label>
+            ))}
+          </fieldset>
+        )}
+      </article>
+    ))
+  }
+</section>
