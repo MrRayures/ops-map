@@ -3,6 +3,7 @@ import "../styles/global.css";
 import Button from "../components/ui/Button.astro";
 import Card from "../components/ui/Card.astro";
 import Badge from "../components/ui/Badge.astro";
+import Overlay from "../components/ui/Overlay.astro";
 
 const surfaces = [
   { token: "--color-surface-base", utility: "bg-surface-base", hex: "#0F1419" },
@@ -283,6 +284,137 @@ const swatchGroups = [
               <Badge variant="status" status="info">Info</Badge>
             </div>
           </Card>
+        </div>
+      </section>
+
+      <section class="border-t border-line-subtle py-10" aria-labelledby="sec-pins">
+        <h2 id="sec-pins" class="mb-6 text-xl font-semibold">F. Pins tactiques</h2>
+
+        <div class="grid gap-4 lg:grid-cols-2">
+          <Card>
+            <span slot="header" class="font-mono text-xs tracking-wider text-fg-secondary uppercase">
+              Équipes
+            </span>
+            <div class="flex flex-wrap items-center gap-6">
+              <span class="flex items-center gap-2">
+                <span class="c-pin is-team-red" aria-hidden="true"></span>
+                <span class="font-mono text-sm text-fg-secondary">Rouge</span>
+              </span>
+              <span class="flex items-center gap-2">
+                <span class="c-pin is-team-blue" aria-hidden="true"></span>
+                <span class="font-mono text-sm text-fg-secondary">Bleu</span>
+              </span>
+              <span class="flex items-center gap-2">
+                <span class="c-pin is-team-green" aria-hidden="true"></span>
+                <span class="font-mono text-sm text-fg-secondary">Vert</span>
+              </span>
+              <span class="flex items-center gap-2">
+                <span class="c-pin is-team-purple" aria-hidden="true"></span>
+                <span class="font-mono text-sm text-fg-secondary">Violet</span>
+              </span>
+            </div>
+          </Card>
+
+          <Card>
+            <span slot="header" class="font-mono text-xs tracking-wider text-fg-secondary uppercase">
+              Markers
+            </span>
+            <div class="flex flex-wrap items-center gap-6">
+              <span class="flex items-center gap-2">
+                <span class="c-pin is-objective" aria-hidden="true"></span>
+                <span class="font-mono text-sm text-fg-secondary">Objectif</span>
+              </span>
+              <span class="flex items-center gap-2">
+                <span class="c-pin is-spawn" aria-hidden="true"></span>
+                <span class="font-mono text-sm text-fg-secondary">Spawn</span>
+              </span>
+              <span class="flex items-center gap-2">
+                <span class="c-pin is-danger" aria-hidden="true"></span>
+                <span class="font-mono text-sm text-fg-secondary">Danger</span>
+              </span>
+              <span class="flex items-center gap-2">
+                <span class="c-pin is-cover" aria-hidden="true"></span>
+                <span class="font-mono text-sm text-fg-secondary">Couvert</span>
+              </span>
+            </div>
+          </Card>
+        </div>
+      </section>
+
+      <section class="border-t border-line-subtle py-10" aria-labelledby="sec-overlay">
+        <h2 id="sec-overlay" class="mb-6 text-xl font-semibold">G. Overlay HUD</h2>
+
+        <div class="relative h-64 overflow-hidden rounded-md border border-line-default bg-surface-base">
+          <div class="absolute top-4 left-4 max-w-xs">
+            <Overlay>
+              <p class="text-xs tracking-[0.1em] text-accent uppercase">· Active mission</p>
+              <p class="mt-2 text-base">SECTOR ALPHA-7</p>
+              <p class="mt-1 text-sm text-fg-secondary">48.8566° N · 2.3522° E</p>
+              <p class="mt-1 text-sm text-fg-muted">T-00:14:32</p>
+            </Overlay>
+          </div>
+        </div>
+
+        <p class="mt-3 text-sm text-fg-muted">
+          Bordure latérale gauche 2px accent, fond translucide, contenu monospace.
+        </p>
+      </section>
+
+      <section class="border-t border-line-subtle py-10" aria-labelledby="sec-effects">
+        <h2 id="sec-effects" class="mb-6 text-xl font-semibold">H. Effets HUD</h2>
+
+        <div class="grid gap-4 lg:grid-cols-2">
+          <div>
+            <h3 class="mb-3 font-mono text-xs tracking-wider text-fg-secondary uppercase">
+              Corner brackets
+            </h3>
+            <div class="c-corner-brackets relative h-48 rounded-md border border-line-default bg-surface-card">
+              <span class="c-corner-brackets-bl" aria-hidden="true"></span>
+              <span class="c-corner-brackets-br" aria-hidden="true"></span>
+              <p class="absolute inset-0 grid place-items-center font-mono text-sm text-fg-secondary">
+                .c-corner-brackets
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="mb-3 font-mono text-xs tracking-wider text-fg-secondary uppercase">
+              Grid overlay
+            </h3>
+            <div class="relative h-48 overflow-hidden rounded-md border border-line-default bg-surface-base">
+              <div class="c-grid-overlay" aria-hidden="true"></div>
+              <p class="absolute inset-0 grid place-items-center font-mono text-sm text-fg-secondary">
+                .c-grid-overlay
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="mb-3 font-mono text-xs tracking-wider text-fg-secondary uppercase">
+              Glow accent (focus)
+            </h3>
+            <div class="relative h-48 grid place-items-center rounded-md border border-line-default bg-surface-card">
+              <button
+                type="button"
+                class="rounded-sm bg-accent px-4 py-2 text-sm font-medium text-accent-on shadow-glow-accent"
+              >
+                État focus simulé
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="mb-3 font-mono text-xs tracking-wider text-fg-secondary uppercase">
+              Brackets actifs
+            </h3>
+            <div class="c-corner-brackets is-active relative h-48 rounded-md border border-line-default bg-surface-card">
+              <span class="c-corner-brackets-bl" aria-hidden="true"></span>
+              <span class="c-corner-brackets-br" aria-hidden="true"></span>
+              <p class="absolute inset-0 grid place-items-center font-mono text-sm text-fg-secondary">
+                .c-corner-brackets.is-active
+              </p>
+            </div>
+          </div>
         </div>
       </section>
     </main>
