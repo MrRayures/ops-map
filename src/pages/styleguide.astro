@@ -1,0 +1,177 @@
+---
+import "../styles/global.css";
+
+const surfaces = [
+  { token: "--color-surface-base", utility: "bg-surface-base", hex: "#0F1419" },
+  { token: "--color-surface-card", utility: "bg-surface-card", hex: "#1A2230" },
+  {
+    token: "--color-surface-elevated",
+    utility: "bg-surface-elevated",
+    hex: "#2A3548",
+  },
+];
+
+const lines = [
+  { token: "--color-line-subtle", utility: "border-line-subtle", hex: "#1F2937" },
+  {
+    token: "--color-line-default",
+    utility: "border-line-default",
+    hex: "#2A3548",
+  },
+];
+
+const fg = [
+  { token: "--color-fg-primary", utility: "text-fg-primary", hex: "#E8ECF1" },
+  { token: "--color-fg-secondary", utility: "text-fg-secondary", hex: "#9AA5B4" },
+  { token: "--color-fg-muted", utility: "text-fg-muted", hex: "#6B7785" },
+];
+
+const accent = [
+  { token: "--color-accent", utility: "bg-accent", hex: "#FFB627" },
+  { token: "--color-accent-hover", utility: "bg-accent-hover", hex: "#FFC547" },
+  { token: "--color-accent-on", utility: "text-accent-on", hex: "#4A3300" },
+];
+
+const teams = [
+  { token: "--color-team-red", utility: "bg-team-red", hex: "#C8412C" },
+  { token: "--color-team-blue", utility: "bg-team-blue", hex: "#2B6A8F" },
+  { token: "--color-team-green", utility: "bg-team-green", hex: "#5C8A3A" },
+  { token: "--color-team-purple", utility: "bg-team-purple", hex: "#8B4FAA" },
+];
+
+const markers = [
+  {
+    token: "--color-marker-objective",
+    utility: "bg-marker-objective",
+    hex: "#FF6B2B",
+  },
+  { token: "--color-marker-spawn", utility: "bg-marker-spawn", hex: "#3DA88C" },
+  { token: "--color-marker-danger", utility: "bg-marker-danger", hex: "#B83838" },
+  { token: "--color-marker-cover", utility: "bg-marker-cover", hex: "#6B5D47" },
+];
+
+const semantic = [
+  { token: "--color-success", utility: "bg-success", hex: "#3DA88C" },
+  { token: "--color-warning", utility: "bg-warning", hex: "#FFB627" },
+  { token: "--color-danger", utility: "bg-danger", hex: "#FF4D4D" },
+  { token: "--color-info", utility: "bg-info", hex: "#4A9EFF" },
+];
+
+const swatchGroups = [
+  { title: "Surfaces", items: surfaces, kind: "bg" as const },
+  { title: "Lignes", items: lines, kind: "border" as const },
+  { title: "Foreground (texte)", items: fg, kind: "fg" as const },
+  { title: "Accent signature", items: accent, kind: "bg" as const },
+  { title: "Équipes / factions", items: teams, kind: "bg" as const },
+  { title: "Markers tactiques", items: markers, kind: "bg" as const },
+  { title: "Sémantique UI", items: semantic, kind: "bg" as const },
+];
+---
+
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Styleguide — Midnight Tactical</title>
+  </head>
+  <body class="bg-surface-base text-fg-primary">
+    <main class="mx-auto max-w-[1200px] px-6 py-10">
+      <header class="mb-10">
+        <p class="font-mono text-xs tracking-[0.2em] text-accent uppercase">
+          Field Ops · Design System
+        </p>
+        <h1 class="mt-2 text-3xl font-semibold">Midnight Tactical</h1>
+        <p class="mt-2 max-w-prose text-fg-secondary">
+          Catalogue visuel — tokens, typographie, composants signature et effets.
+          Référence vivante de la palette en situation.
+        </p>
+      </header>
+
+      <section class="border-t border-line-subtle py-10" aria-labelledby="sec-palette">
+        <h2 id="sec-palette" class="mb-6 text-xl font-semibold">A. Palette</h2>
+
+        {
+          swatchGroups.map((group) => (
+            <div class="mb-8">
+              <h3 class="mb-3 font-mono text-xs tracking-wider text-fg-secondary uppercase">
+                {group.title}
+              </h3>
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {group.items.map((item) => (
+                  <div class="flex items-center gap-3 rounded-md border border-line-default bg-surface-card p-3">
+                    {group.kind === "bg" && (
+                      <span
+                        class="block size-12 shrink-0 rounded-sm border border-line-subtle"
+                        style={`background:${item.hex}`}
+                        aria-hidden="true"
+                      />
+                    )}
+                    {group.kind === "border" && (
+                      <span
+                        class="block size-12 shrink-0 rounded-sm bg-surface-base"
+                        style={`border:2px solid ${item.hex}`}
+                        aria-hidden="true"
+                      />
+                    )}
+                    {group.kind === "fg" && (
+                      <span
+                        class="grid size-12 shrink-0 place-items-center rounded-sm border border-line-subtle bg-surface-base font-semibold"
+                        style={`color:${item.hex}`}
+                        aria-hidden="true"
+                      >
+                        Aa
+                      </span>
+                    )}
+                    <div class="min-w-0">
+                      <p class="font-mono text-xs text-fg-primary">{item.token}</p>
+                      <p class="font-mono text-xs text-fg-secondary">{item.utility}</p>
+                      <p class="font-mono text-xs text-fg-muted">{item.hex}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))
+        }
+      </section>
+
+      <section class="border-t border-line-subtle py-10" aria-labelledby="sec-type">
+        <h2 id="sec-type" class="mb-6 text-xl font-semibold">B. Typographie</h2>
+
+        <div class="grid gap-6 lg:grid-cols-2">
+          <article class="rounded-md border border-line-default bg-surface-card p-5">
+            <h3 class="mb-3 font-mono text-xs tracking-wider text-fg-secondary uppercase">
+              Sans · Inter Variable
+            </h3>
+            <p class="text-3xl font-semibold">Opération nocturne</p>
+            <p class="mt-2 text-fg-secondary">
+              Le brouillard couvre la zone de capture. Équipe rouge engage en
+              flanc nord.
+            </p>
+            <ul class="mt-4 space-y-1 text-sm text-fg-muted">
+              <li>text-xs · 12px</li>
+              <li>text-sm · 14px</li>
+              <li>text-base · 16px</li>
+              <li>text-lg · 18px</li>
+              <li>text-xl · 20px</li>
+            </ul>
+          </article>
+
+          <article class="rounded-md border border-line-default bg-surface-card p-5">
+            <h3 class="mb-3 font-mono text-xs tracking-wider text-fg-secondary uppercase">
+              Mono · JetBrains Mono Variable
+            </h3>
+            <p class="font-mono text-2xl">SECTOR · ALPHA-7</p>
+            <p class="mt-2 font-mono text-sm text-fg-secondary">
+              48.8566° N · 2.3522° E
+            </p>
+            <p class="mt-1 font-mono text-sm text-fg-muted">T-00:14:32</p>
+            <p class="mt-4 font-mono text-xs tracking-[0.1em] text-accent uppercase">
+              · Live transmission ·
+            </p>
+          </article>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
