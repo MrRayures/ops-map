@@ -4,6 +4,8 @@ import Button from "../components/ui/Button.astro";
 import Card from "../components/ui/Card.astro";
 import Badge from "../components/ui/Badge.astro";
 import Overlay from "../components/ui/Overlay.astro";
+import { MARKER_SHAPES, MARKER_COLORS, MARKER_ICONS } from "../data/markers";
+import { buildIconSvg } from "../data/marker-icons";
 
 const surfaces = [
   { token: "--color-surface-base", utility: "bg-surface-base", hex: "#0F1419" },
@@ -431,6 +433,85 @@ const swatchGroups = [
           </div>
         </div>
       </section>
+
+      <section class="border-t border-line-subtle py-10" aria-labelledby="sec-markers">
+  <h2 id="sec-markers" class="mb-6 text-xl font-semibold">I. Markers d'annotation</h2>
+
+  <div class="grid gap-6">
+    <Card>
+      <span slot="header" class="font-mono text-xs tracking-wider text-fg-secondary uppercase">
+        Formes (square · triangle · circle · diamond)
+      </span>
+      <div class="flex flex-wrap items-center gap-8 py-4">
+        {
+          MARKER_SHAPES.map((shape) => (
+            <div class:list={["c-marker", `is-shape-${shape}`, "is-color-team-blue"]} aria-hidden="true">
+              <div class="c-marker-body">
+                <span class="c-marker-text">{shape.charAt(0).toUpperCase()}</span>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </Card>
+
+    <Card>
+      <span slot="header" class="font-mono text-xs tracking-wider text-fg-secondary uppercase">
+        Couleurs (4 teams + 4 markers)
+      </span>
+      <div class="flex flex-wrap items-center gap-6 py-4">
+        {
+          MARKER_COLORS.map((color) => (
+            <div class:list={["c-marker", "is-shape-square", `is-color-${color}`]} aria-hidden="true">
+              <div class="c-marker-body" />
+            </div>
+          ))
+        }
+      </div>
+    </Card>
+
+    <Card>
+      <span slot="header" class="font-mono text-xs tracking-wider text-fg-secondary uppercase">
+        Contenus : texte / icône / aucun
+      </span>
+      <div class="flex flex-wrap items-center gap-6 py-4">
+        <div class="c-marker is-shape-square is-color-team-red" aria-hidden="true">
+          <div class="c-marker-body" />
+        </div>
+        <div class="c-marker is-shape-square is-color-team-red" aria-hidden="true">
+          <div class="c-marker-body"><span class="c-marker-text">LZ</span></div>
+        </div>
+        {
+          MARKER_ICONS.map((icon) => (
+            <div class="c-marker is-shape-square is-color-team-red" aria-hidden="true">
+              <div class="c-marker-body" set:html={buildIconSvg(icon)} />
+            </div>
+          ))
+        }
+      </div>
+    </Card>
+
+    <Card>
+      <span slot="header" class="font-mono text-xs tracking-wider text-fg-secondary uppercase">
+        Avec label HUD + état sélectionné
+      </span>
+      <div class="flex flex-wrap items-end gap-12 py-8">
+        <div class="c-marker is-shape-square is-color-marker-spawn" aria-hidden="true">
+          <div class="c-marker-body"><span class="c-marker-text">S1</span></div>
+          <div class="c-marker-label">Spawn Alpha</div>
+        </div>
+        <div class="c-marker is-shape-circle is-color-marker-objective is-selected" aria-hidden="true">
+          <div class="c-marker-body" set:html={`<span>1</span>`} />
+          <div class="c-marker-label">Objectif</div>
+        </div>
+        <div class="c-marker is-shape-diamond is-color-marker-danger" aria-hidden="true">
+          <div class="c-marker-body" set:html={buildIconSvg("alert-triangle")} />
+          <div class="c-marker-label">Hot zone</div>
+        </div>
+      </div>
+    </Card>
+  </div>
+</section>
     </main>
   </body>
 </html>
