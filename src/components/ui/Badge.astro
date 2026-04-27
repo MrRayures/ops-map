@@ -1,0 +1,48 @@
+---
+type Team = "red" | "blue" | "green" | "purple";
+type Status = "success" | "warning" | "danger" | "info";
+type Variant = "live" | "team" | "status";
+
+interface Props {
+  variant: Variant;
+  team?: Team;
+  status?: Status;
+  class?: string;
+}
+
+const { variant, team, status, class: extraClass } = Astro.props;
+
+const base = "inline-flex items-center rounded-sm px-2 py-0.5 text-xs";
+
+const liveClass =
+  "border border-accent bg-transparent font-mono uppercase tracking-[0.1em] text-accent";
+
+const teamClass: Record<Team, string> = {
+  red: "bg-team-red text-fg-primary",
+  blue: "bg-team-blue text-fg-primary",
+  green: "bg-team-green text-fg-primary",
+  purple: "bg-team-purple text-fg-primary",
+};
+
+const statusClass: Record<Status, string> = {
+  success: "border border-success/30 bg-success/15 text-success",
+  warning: "border border-warning/30 bg-warning/15 text-warning",
+  danger: "border border-danger/30 bg-danger/15 text-danger",
+  info: "border border-info/30 bg-info/15 text-info",
+};
+
+let variantClass = "";
+if (variant === "live") {
+  variantClass = liveClass;
+} else if (variant === "team" && team) {
+  variantClass = teamClass[team];
+} else if (variant === "status" && status) {
+  variantClass = statusClass[status];
+}
+
+const classes = [base, variantClass, extraClass].filter(Boolean).join(" ");
+---
+
+<span class={classes}>
+  <slot />
+</span>
