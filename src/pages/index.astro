@@ -104,8 +104,12 @@ const operationName = `OPERATION ${pick(OP_ADJECTIVES)} ${pick(OP_NOUNS)}`;
 	import {
 		bootstrap,
 		update,
+		saveNow,
+		exportToFile,
+		importFromFile,
 		type PersistedState,
 	} from "../lib/storage";
+	import { whenMapReady } from "../lib/leaflet-map-ref";
 
 	const titleText = document.querySelector<HTMLElement>("[data-title-text]");
 	const titleInput = document.querySelector<HTMLInputElement>("#op-title");
@@ -165,6 +169,79 @@ const operationName = `OPERATION ${pick(OP_ADJECTIVES)} ${pick(OP_NOUNS)}`;
 			} else if (e.key === "Escape") {
 				titleInput.value = titleText.textContent ?? "";
 				exitEditMode();
+			}
+		});
+
+		// --- Toast helper ---
+		let toastTimer: number | null = null;
+		const showToast = (message: string): void => {
+			const el = document.getElementById("toast");
+			if (!el) return;
+			el.textContent = message;
+			el.hidden = false;
+			if (toastTimer !== null) clearTimeout(toastTimer);
+			toastTimer = window.setTimeout(() => {
+				el.hidden = true;
+				toastTimer = null;
+			}, 2000);
+		};
+
+		// --- Apply a full state to the UI (used by Importer) ---
+		const applyState = (next: PersistedState): void => {
+			update(next);
+			saveNow();
+			titleText.textContent = next.title;
+			titleInput.value = next.title;
+			whenMapReady((map) => {
+				map.setView(next.view.center, next.view.zoom);
+			});
+		};
+
+		// --- Sauvegarder ---
+		const saveBtn = document.querySelector<HTMLButtonElement>(
+			'button[data-action="save"]',
+		);
+		saveBtn?.addEventListener("click", () => {
+			if (!titleInput.hidden) {
+				// Force exit edit mode so the in-progress value gets persisted
+				exitEditMode();
+			}
+			saveNow();
+			showToast("Sauvegardé");
+		});
+
+		// --- Exporter ---
+		const exportBtn = document.querySelector<HTMLButtonElement>(
+			'button[data-action="export"]',
+		);
+		exportBtn?.addEventListener("click", () => {
+			exportToFile();
+		});
+
+		// --- Importer ---
+		const fileInput = document.createElement("input");
+		fileInput.type = "file";
+		fileInput.accept = "application/json,.json";
+
+		const importBtn = document.querySelector<HTMLButtonElement>(
+			'button[data-action="import"]',
+		);
+		importBtn?.addEventListener("click", () => {
+			if (!confirm("Remplacer l'opération en cours ?")) return;
+			fileInput.click();
+		});
+
+		fileInput.addEventListener("change", async () => {
+			const file = fileInput.files?.[0];
+			if (!file) return;
+			try {
+				const next = await importFromFile(file);
+				applyState(next);
+				showToast("Importé");
+			} catch (err) {
+				alert(err instanceof Error ? err.message : "Fichier invalide");
+			} finally {
+				fileInput.value = ""; // allow re-importing the same file
 			}
 		});
 	}
