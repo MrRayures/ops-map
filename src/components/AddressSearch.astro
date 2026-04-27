@@ -1,0 +1,124 @@
+---
+import Search from "@lucide/astro/icons/search";
+---
+
+<form role="search" id="address-form" class="flex flex-col gap-2">
+  <label for="address-q" class="font-mono text-xs font-semibold tracking-wider text-fg-secondary uppercase">
+    Rechercher une adresse
+  </label>
+  <div class="relative">
+    <Search
+      size={16}
+      aria-hidden="true"
+      class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-fg-muted"
+    />
+    <input
+      id="address-q"
+      name="q"
+      type="search"
+      autocomplete="off"
+      placeholder="Ville, rue, code postal…"
+      class="w-full rounded-sm border border-line-default bg-surface-base py-2 pr-3 pl-9 text-sm text-fg-primary placeholder:text-fg-muted focus:border-accent focus:outline-none"
+    />
+  </div>
+</form>
+
+<p
+  id="address-status"
+  aria-live="polite"
+  aria-atomic="true"
+  class="min-h-4 text-xs text-fg-muted"
+>
+</p>
+
+<ul id="address-results" class="flex flex-col gap-1"></ul>
+
+<script>
+  import { geocoders } from "leaflet-control-geocoder";
+  import type { GeocodingResult } from "leaflet-control-geocoder/dist/geocoders/api";
+
+  const form = document.getElementById("address-form") as HTMLFormElement | null;
+  const input = document.getElementById("address-q") as HTMLInputElement | null;
+  const status = document.getElementById("address-status") as HTMLElement | null;
+  const list = document.getElementById("address-results") as HTMLElement | null;
+
+  if (form && input && status && list) {
+    const geocoder = geocoders.nominatim({
+      geocodingQueryParams: { "accept-language": "fr", limit: 5 },
+    });
+
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let token = 0;
+
+    const buttonClass =
+      "block w-full truncate rounded-sm border border-line-default bg-surface-base px-3 py-2 text-left text-sm text-fg-primary transition-colors hover:bg-surface-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+
+    function renderResults(items: GeocodingResult[]) {
+      list!.replaceChildren(
+        ...items.map((r) => {
+          const li = document.createElement("li");
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = buttonClass;
+          btn.title = r.name;
+          btn.textContent = r.name;
+          btn.addEventListener("click", () => {
+            const sw = r.bbox.getSouthWest();
+            const ne = r.bbox.getNorthEast();
+            window.dispatchEvent(
+              new CustomEvent("map:fly", {
+                detail: {
+                  bounds: [
+                    [sw.lat, sw.lng],
+                    [ne.lat, ne.lng],
+                  ] as [[number, number], [number, number]],
+                  center: [r.center.lat, r.center.lng] as [number, number],
+                },
+              }),
+            );
+          });
+          li.appendChild(btn);
+          return li;
+        }),
+      );
+    }
+
+    async function search(q: string) {
+      const myToken = ++token;
+      status!.textContent = "Recherche…";
+      try {
+        const results = await geocoder.geocode(q);
+        if (myToken !== token) return;
+        if (results.length === 0) {
+          status!.textContent = "Aucun résultat";
+          list!.replaceChildren();
+          return;
+        }
+        status!.textContent = `${results.length} résultat${results.length > 1 ? "s" : ""}`;
+        renderResults(results);
+      } catch {
+        if (myToken !== token) return;
+        status!.textContent = "Erreur lors de la recherche";
+      }
+    }
+
+    input.addEventListener("input", () => {
+      if (timer) clearTimeout(timer);
+      const q = input.value.trim();
+      if (!q) {
+        token++;
+        list.replaceChildren();
+        status.textContent = "";
+        return;
+      }
+      timer = setTimeout(() => search(q), 400);
+    });
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (timer) clearTimeout(timer);
+      const q = input.value.trim();
+      if (q) search(q);
+    });
+  }
+</script>
