@@ -5,6 +5,7 @@ import Map from "../components/Map.astro";
 import MarkerLayer from "../components/MarkerLayer.astro";
 import PanelGroup from "../components/PanelGroup.astro";
 import Sidebar from "../components/Sidebar.astro";
+import Toast from "../components/Toast.astro";
 import "../styles/global.css";
 
 const OP_ADJECTIVES = [
@@ -95,10 +96,17 @@ const operationName = `OPERATION ${pick(OP_ADJECTIVES)} ${pick(OP_NOUNS)}`;
 			<Map />
 			<MarkerLayer />
 		</main>
+		<Toast />
 	</body>
 </html>
 
 <script>
+	import {
+		bootstrap,
+		update,
+		type PersistedState,
+	} from "../lib/storage";
+
 	const titleText = document.querySelector<HTMLElement>("[data-title-text]");
 	const titleInput = document.querySelector<HTMLInputElement>("#op-title");
 	const editBtn = document.querySelector<HTMLButtonElement>(
@@ -109,6 +117,24 @@ const operationName = `OPERATION ${pick(OP_ADJECTIVES)} ${pick(OP_NOUNS)}`;
 	);
 
 	if (titleText && titleInput && editBtn && validateBtn) {
+		// Build defaults from the SSR-rendered DOM (random title + France-centered view)
+		const defaults: PersistedState = {
+			version: 1,
+			savedAt: new Date().toISOString(),
+			title: titleText.textContent ?? "",
+			view: { center: [46.2, 2.2], zoom: 6 },
+		};
+
+		const { state, restored } = bootstrap(defaults);
+
+		// Apply restored title (1-frame flash acceptable)
+		titleText.textContent = state.title;
+		titleInput.value = state.title;
+
+		// Expose initial view for Map.astro and notify it
+		window.__opsMapBoot = { view: state.view, restored };
+		window.dispatchEvent(new Event("ops-map:boot"));
+
 		const enterEditMode = (): void => {
 			titleInput.value = titleText.textContent ?? "";
 			titleText.hidden = true;
@@ -120,12 +146,14 @@ const operationName = `OPERATION ${pick(OP_ADJECTIVES)} ${pick(OP_NOUNS)}`;
 		};
 
 		const exitEditMode = (): void => {
-			titleText.textContent = titleInput.value;
+			const newTitle = titleInput.value;
+			titleText.textContent = newTitle;
 			titleInput.hidden = true;
 			validateBtn.hidden = true;
 			titleText.hidden = false;
 			editBtn.hidden = false;
 			editBtn.focus();
+			update({ title: newTitle });
 		};
 
 		editBtn.addEventListener("click", enterEditMode);
