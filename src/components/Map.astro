@@ -64,15 +64,20 @@ import { update } from "../lib/storage";
       const boot = window.__opsMapBoot;
       if (boot?.restored) {
         map.setView(boot.view.center, boot.view.zoom);
-        return;
+      } else {
+        // No restored state — honor SSR-provided dataset (always set by Map.astro template)
+        const { center, zoom, bounds } = container.dataset;
+        if (center && zoom) {
+          map.setView(JSON.parse(center) as [number, number], Number(zoom));
+        } else if (bounds) {
+          map.fitBounds(JSON.parse(bounds) as [[number, number], [number, number]]);
+        }
       }
-      // No restored state — honor SSR-provided dataset (always set by Map.astro template)
-      const { center, zoom, bounds } = container.dataset;
-      if (center && zoom) {
-        map.setView(JSON.parse(center) as [number, number], Number(zoom));
-      } else if (bounds) {
-        map.fitBounds(JSON.parse(bounds) as [[number, number], [number, number]]);
-      }
+      // Attach moveend AFTER initial view to skip the spurious save triggered by setView/fitBounds
+      map.on("moveend", () => {
+        const c = map.getCenter();
+        update({ view: { center: [c.lat, c.lng], zoom: map.getZoom() } });
+      });
     };
 
     if (window.__opsMapBoot) {
@@ -120,11 +125,6 @@ import { update } from "../lib/storage";
       if (state.selectedId !== null) {
         selectMarker(null);
       }
-    });
-
-    map.on("moveend", () => {
-      const c = map.getCenter();
-      update({ view: { center: [c.lat, c.lng], zoom: map.getZoom() } });
     });
   }
 </script>
