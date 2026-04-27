@@ -32,6 +32,11 @@ const { bounds = FRANCE_BOUNDS, center, zoom, ariaLabel = "Carte satellite inter
   import L from "leaflet";
   import "leaflet/dist/leaflet.css";
   import { mapStyles, defaultMapStyle, type MapStyleId } from "../data/map-styles";
+  import {
+    subscribe as subscribeMarkers,
+    getState as getMarkersState,
+    createMarker,
+  } from "../lib/markers-store";
 
   const container = document.getElementById("map");
   if (container) {
@@ -83,6 +88,20 @@ const { bounds = FRANCE_BOUNDS, center, zoom, ariaLabel = "Carte satellite inter
       const { bounds, center } = (event as CustomEvent<FlyDetail>).detail;
       if (bounds) map.flyToBounds(bounds, { duration: 0.8 });
       else if (center) map.flyTo(center, 15, { duration: 0.8 });
+    });
+
+    // --- Place mode ---
+    function applyPlacingClass(): void {
+      const { mode } = getMarkersState();
+      container!.classList.toggle("is-placing", mode === "placing");
+    }
+    applyPlacingClass();
+    subscribeMarkers(applyPlacingClass);
+
+    map.on("click", (e) => {
+      const { mode, draft } = getMarkersState();
+      if (mode !== "placing") return;
+      createMarker(e.latlng.lat, e.latlng.lng, draft);
     });
   }
 </script>
