@@ -6,7 +6,7 @@
 .c-corner-brackets::after,
 .c-corner-brackets > .c-corner-brackets-bl,
 .c-corner-brackets > .c-corner-brackets-br {
-  content: "";
+  content: '';
   position: absolute;
   width: var(--bracket-size);
   height: var(--bracket-size);

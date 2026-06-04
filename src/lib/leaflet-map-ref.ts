@@ -1,4 +1,4 @@
-import type L from "leaflet";
+import type L from 'leaflet';
 
 let cachedMap: L.Map | null = null;
 const pending: Array<(map: L.Map) => void> = [];

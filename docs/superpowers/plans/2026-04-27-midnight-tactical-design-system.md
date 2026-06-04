@@ -185,9 +185,8 @@ Create `src/styles/tokens.css` with exactly this content:
   --shadow-glow-objective: 0 0 12px rgba(255, 107, 43, 0.6);
 
   /* Fonts */
-  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-mono:
-    "JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 ```
 
@@ -296,19 +295,19 @@ prefers-reduced-motion guard."
 Current content (1 line):
 
 ```css
-@import "tailwindcss";
+@import 'tailwindcss';
 ```
 
 Replace the entire file with:
 
 ```css
-@import "tailwindcss";
-@import "./tokens.css";
+@import 'tailwindcss';
+@import './tokens.css';
 
-@import "@fontsource-variable/inter";
-@import "@fontsource-variable/jetbrains-mono";
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/jetbrains-mono';
 
-@import "./primitives.css";
+@import './primitives.css';
 ```
 
 - [ ] **Step 2: Run dev server and visually confirm the baseline page now uses the new tokens at the html level**
@@ -675,7 +674,7 @@ Create `src/styles/components/corner-brackets.css` with exactly this content:
 .c-corner-brackets::after,
 .c-corner-brackets > .c-corner-brackets-bl,
 .c-corner-brackets > .c-corner-brackets-br {
-  content: "";
+  content: '';
   position: absolute;
   width: var(--bracket-size);
   height: var(--bracket-size);
@@ -761,16 +760,8 @@ Create `src/styles/components/grid-overlay.css` with exactly this content:
   inset: 0;
   pointer-events: none;
   background-image:
-    repeating-linear-gradient(
-      to right,
-      var(--grid-line) 0 1px,
-      transparent 1px var(--grid-cell)
-    ),
-    repeating-linear-gradient(
-      to bottom,
-      var(--grid-line) 0 1px,
-      transparent 1px var(--grid-cell)
-    );
+    repeating-linear-gradient(to right, var(--grid-line) 0 1px, transparent 1px var(--grid-cell)),
+    repeating-linear-gradient(to bottom, var(--grid-line) 0 1px, transparent 1px var(--grid-cell));
 }
 ```
 
@@ -886,23 +877,23 @@ glow per the brief."
 Read the current `global.css` (set by Task 5) — it currently ends with:
 
 ```css
-@import "./primitives.css";
+@import './primitives.css';
 ```
 
 Replace the entire file with:
 
 ```css
-@import "tailwindcss";
-@import "./tokens.css";
+@import 'tailwindcss';
+@import './tokens.css';
 
-@import "@fontsource-variable/inter";
-@import "@fontsource-variable/jetbrains-mono";
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/jetbrains-mono';
 
-@import "./primitives.css";
+@import './primitives.css';
 
-@import "./components/corner-brackets.css";
-@import "./components/grid-overlay.css";
-@import "./components/pin.css";
+@import './components/corner-brackets.css';
+@import './components/grid-overlay.css';
+@import './components/pin.css';
 ```
 
 - [ ] **Step 2: Verify build picks up the BEM CSS**
@@ -1178,9 +1169,9 @@ Will grow with components in subsequent commits."
 Open `src/pages/styleguide.astro`. At the top of the frontmatter (after the `import "../styles/global.css";` line), add:
 
 ```ts
-import Button from "../components/ui/Button.astro";
-import Card from "../components/ui/Card.astro";
-import Badge from "../components/ui/Badge.astro";
+import Button from '../components/ui/Button.astro';
+import Card from '../components/ui/Card.astro';
+import Badge from '../components/ui/Badge.astro';
 ```
 
 - [ ] **Step 2: Append three new sections inside `<main>`**
@@ -1340,7 +1331,7 @@ Card, Badge) with usage examples in French context."
 Open `src/pages/styleguide.astro`. In the frontmatter, after the existing component imports, add:
 
 ```ts
-import Overlay from "../components/ui/Overlay.astro";
+import Overlay from '../components/ui/Overlay.astro';
 ```
 
 - [ ] **Step 2: Append the three remaining sections inside `<main>`**
@@ -1539,20 +1530,20 @@ In the frontmatter (lines ~24–28), replace:
 
 ```ts
 const navButton =
-  "group relative grid size-11 place-items-center rounded-md text-slate-400 transition-colors hover:bg-slate-800 hover:text-white aria-selected:bg-slate-800 aria-selected:text-emerald-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500";
+  'group relative grid size-11 place-items-center rounded-md text-slate-400 transition-colors hover:bg-slate-800 hover:text-white aria-selected:bg-slate-800 aria-selected:text-emerald-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500';
 
 const tooltip =
-  "pointer-events-none absolute left-full top-1/2 z-10 ml-3 -translate-y-1/2 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-xs font-medium text-slate-100 shadow-lg opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100";
+  'pointer-events-none absolute left-full top-1/2 z-10 ml-3 -translate-y-1/2 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-xs font-medium text-slate-100 shadow-lg opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100';
 ```
 
 with:
 
 ```ts
 const navButton =
-  "group relative grid size-11 place-items-center rounded-sm text-fg-secondary transition-colors hover:bg-surface-elevated hover:text-fg-primary aria-selected:bg-surface-elevated aria-selected:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+  'group relative grid size-11 place-items-center rounded-sm text-fg-secondary transition-colors hover:bg-surface-elevated hover:text-fg-primary aria-selected:bg-surface-elevated aria-selected:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent';
 
 const tooltip =
-  "pointer-events-none absolute left-full top-1/2 z-10 ml-3 -translate-y-1/2 whitespace-nowrap rounded-sm bg-surface-elevated px-2 py-1 font-mono text-xs tracking-wider text-fg-primary uppercase shadow-lg opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100";
+  'pointer-events-none absolute left-full top-1/2 z-10 ml-3 -translate-y-1/2 whitespace-nowrap rounded-sm bg-surface-elevated px-2 py-1 font-mono text-xs tracking-wider text-fg-primary uppercase shadow-lg opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100';
 ```
 
 - [ ] **Step 3: Replace the `<aside>` element classes**
@@ -1928,14 +1919,14 @@ Find:
 
 ```ts
 const buttonClass =
-  "block w-full truncate rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-left text-sm text-slate-300 transition-colors hover:border-slate-700 hover:bg-slate-800 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500";
+  'block w-full truncate rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-left text-sm text-slate-300 transition-colors hover:border-slate-700 hover:bg-slate-800 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500';
 ```
 
 Replace with:
 
 ```ts
 const buttonClass =
-  "block w-full truncate rounded-sm border border-line-default bg-surface-base px-3 py-2 text-left text-sm text-fg-primary transition-colors hover:bg-surface-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+  'block w-full truncate rounded-sm border border-line-default bg-surface-base px-3 py-2 text-left text-sm text-fg-primary transition-colors hover:bg-surface-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent';
 ```
 
 (The hover-border-slate-700 is dropped per the spec — bordure constante.)

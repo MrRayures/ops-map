@@ -39,11 +39,33 @@ getState as getMarkersState,
 selectMarker,
 subscribe as subscribeMarkers,
 } from "../lib/markers-store";
+import {
+addDraftPoint,
+finishDraft,
+getState as getZonesState,
+selectZone,
+setMode as setZoneMode,
+subscribe as subscribeZones,
+} from "../lib/zones-store";
+import {
+createText,
+getState as getTextsState,
+selectText,
+subscribe as subscribeTexts,
+} from "../lib/texts-store";
+import {
+getState as getSettingsState,
+subscribe as subscribeSettings,
+} from "../lib/settings-store";
 import { update } from "../lib/storage";
 
   const container = document.getElementById("map");
   if (container) {
-    const map = L.map(container);
+    const map = L.map(container, {
+      zoomSnap: 0.25,
+      zoomDelta: 0.5,
+      wheelPxPerZoomLevel: 60,
+    });
 
     setLeafletMap(map);
 
@@ -59,6 +81,268 @@ import { update } from "../lib/storage";
 
     let layers = buildLayers(defaultMapStyle);
     for (const l of layers) l.addTo(map);
+
+    // --- Scale control (custom): always reflects the active grid step
+    //     so the bar lines up with the on-map grid precision rather
+    //     than a Leaflet-chosen round value derived from zoom alone.
+    const ScaleControl = L.Control.extend({
+      options: { position: "bottomleft" as L.ControlPosition },
+      onAdd() {
+        const el = L.DomUtil.create("div", "c-grid-scale");
+        el.innerHTML =
+          '<div class="c-grid-scale-bar"></div><div class="c-grid-scale-label"></div>';
+        return el;
+      },
+    });
+    const scaleCtrl = new ScaleControl().addTo(map);
+    const scaleEl = scaleCtrl.getContainer();
+    const scaleBarEl = scaleEl?.querySelector<HTMLElement>(".c-grid-scale-bar");
+    const scaleLabelEl = scaleEl?.querySelector<HTMLElement>(".c-grid-scale-label");
+
+    function formatStep(stepM: number): string {
+      return stepM >= 1000 ? `${stepM / 1000} km` : `${stepM} m`;
+    }
+
+    function updateScale(): void {
+      if (!scaleBarEl || !scaleLabelEl) return;
+      const settings = getSettingsState();
+      const center = map.getCenter();
+      const cosLat = Math.cos((center.lat * Math.PI) / 180);
+      const metersPerPixel =
+        (156543.03392 * cosLat) / Math.pow(2, map.getZoom());
+      const stepM =
+        settings.gridStep === "auto"
+          ? pickStepMeters(metersPerPixel)
+          : settings.gridStep;
+      const pxWidth = Math.max(2, stepM / metersPerPixel);
+      scaleBarEl.style.width = `${pxWidth}px`;
+      scaleLabelEl.textContent = formatStep(stepM);
+    }
+
+    // --- Tactical grid (toggleable via settings.showGrid) ---
+    const gridGroup = L.layerGroup().addTo(map);
+    // Nice meter steps: 1, 2, 5, ×10 octaves up to 1000 km.
+    const NICE_STEPS_M = [
+      1, 2, 5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 25000, 50000,
+      100000, 250000, 500000, 1000000,
+    ] as const;
+
+    function pickStepMeters(metersPerPixel: number): number {
+      const targetPx = 80;
+      const minM = targetPx * metersPerPixel;
+      for (const s of NICE_STEPS_M) if (s >= minM) return s;
+      return NICE_STEPS_M[NICE_STEPS_M.length - 1];
+    }
+
+    // Excel-style column label: 0→A, 25→Z, 26→AA, 27→AB, …
+    function colLabel(i: number): string {
+      let s = "";
+      let n = i;
+      while (n >= 0) {
+        s = String.fromCharCode(65 + (n % 26)) + s;
+        n = Math.floor(n / 26) - 1;
+      }
+      return s;
+    }
+
+    function buildCoordIcon(text: string): L.DivIcon {
+      return L.divIcon({
+        html: `<div class="c-grid-coord">${text}</div>`,
+        className: "",
+        iconAnchor: [0, 0],
+      });
+    }
+
+    function drawGrid(): void {
+      gridGroup.clearLayers();
+      const settings = getSettingsState();
+      if (!settings.showGrid) return;
+
+      const bounds = map.getBounds().pad(0.1);
+      const center = map.getCenter();
+      const zoom = map.getZoom();
+      const cosLat = Math.cos((center.lat * Math.PI) / 180);
+      const metersPerPixel = (156543.03392 * cosLat) / Math.pow(2, zoom);
+      const stepM =
+        settings.gridStep === "auto" ? pickStepMeters(metersPerPixel) : settings.gridStep;
+
+      const stepLat = stepM / 111320;
+      const stepLng = stepM / (111320 * Math.max(cosLat, 1e-6));
+
+      const minLat = bounds.getSouth();
+      const maxLat = bounds.getNorth();
+      const minLng = bounds.getWest();
+      const maxLng = bounds.getEast();
+
+      const startLat = Math.floor(minLat / stepLat) * stepLat;
+      const startLng = Math.floor(minLng / stepLng) * stepLng;
+
+      const lineOpts: L.PolylineOptions = {
+        className: "c-grid-line",
+        color: "#ffffff",
+        weight: 1,
+        opacity: 0.35,
+        interactive: false,
+      };
+
+      for (let lat = startLat; lat <= maxLat; lat += stepLat) {
+        L.polyline(
+          [
+            [lat, minLng],
+            [lat, maxLng],
+          ],
+          lineOpts,
+        ).addTo(gridGroup);
+      }
+      for (let lng = startLng; lng <= maxLng; lng += stepLng) {
+        L.polyline(
+          [
+            [minLat, lng],
+            [maxLat, lng],
+          ],
+          lineOpts,
+        ).addTo(gridGroup);
+      }
+
+      // --- Coordinate labels around the play area ---
+      // Letters (A, B, C…) on top of the play area, numbers (1, 2…) on
+      // the left side, both snapped to the grid step so the cells line
+      // up. Top-row gets "1"; leftmost column gets "A".
+      const playArea = getZonesState().zones.find((z) => z.isPlayArea);
+      if (!playArea || playArea.points.length < 3) return;
+
+      const lats = playArea.points.map((p) => p[0]);
+      const lngs = playArea.points.map((p) => p[1]);
+      const paMinLat = Math.min(...lats);
+      const paMaxLat = Math.max(...lats);
+      const paMinLng = Math.min(...lngs);
+      const paMaxLng = Math.max(...lngs);
+
+      const colStart = Math.floor(paMinLng / stepLng) * stepLng;
+      const colEnd = Math.ceil(paMaxLng / stepLng) * stepLng;
+      const rowStart = Math.floor(paMinLat / stepLat) * stepLat;
+      const rowEnd = Math.ceil(paMaxLat / stepLat) * stepLat;
+
+      const numCols = Math.max(0, Math.round((colEnd - colStart) / stepLng));
+      const numRows = Math.max(0, Math.round((rowEnd - rowStart) / stepLat));
+
+      // Skip when overly dense — keeps perf/legibility under control.
+      if (numCols > 200 || numRows > 200) return;
+
+      const labelLatTop = paMaxLat + stepLat * 0.5;
+      const labelLngLeft = paMinLng - stepLng * 0.5;
+
+      for (let i = 0; i < numCols; i++) {
+        const centerLng = colStart + (i + 0.5) * stepLng;
+        L.marker([labelLatTop, centerLng], {
+          icon: buildCoordIcon(colLabel(i)),
+          interactive: false,
+          keyboard: false,
+        }).addTo(gridGroup);
+      }
+
+      for (let j = 0; j < numRows; j++) {
+        // j=0 is the southernmost row; we want the northern row labeled
+        // "1" (top→bottom numbering on a north-up map).
+        const centerLat = rowStart + (j + 0.5) * stepLat;
+        const num = numRows - j;
+        L.marker([centerLat, labelLngLeft], {
+          icon: buildCoordIcon(String(num)),
+          interactive: false,
+          keyboard: false,
+        }).addTo(gridGroup);
+      }
+    }
+
+    map.on("moveend zoomend", drawGrid);
+    map.on("moveend zoomend", updateScale);
+    // Settings can change before the map view is set; guard the
+    // dependent renders so they don't run before the first setView.
+    function safeRedraw(): void {
+      try {
+        map.getCenter();
+      } catch {
+        return; // view not initialized yet
+      }
+      drawGrid();
+      updateScale();
+    }
+    subscribeSettings(safeRedraw);
+
+    // --- Cursor coordinates overlay ---
+    // Floating tooltip that follows the mouse while hovering the map and
+    // shows the play-area-anchored cell coord (e.g. "C4"). Toggled via
+    // settings.showCursorCoords; auto-hidden when no play area is set or
+    // the cursor falls outside the play-area's column/row range.
+    const cursorCoordEl = document.createElement("div");
+    cursorCoordEl.className = "c-cursor-coord";
+    container.appendChild(cursorCoordEl);
+
+    function hideCursorCoord(): void {
+      cursorCoordEl.classList.remove("is-visible");
+    }
+
+    function updateCursorCoord(e: L.LeafletMouseEvent): void {
+      const settings = getSettingsState();
+      // Cursor coords require both the grid to be enabled AND the
+      // explicit cursor-coords setting; the panel UI also disables the
+      // cursor toggle when the grid is off, but guard here too.
+      if (!settings.showGrid || !settings.showCursorCoords)
+        return hideCursorCoord();
+      const playArea = getZonesState().zones.find((z) => z.isPlayArea);
+      if (!playArea || playArea.points.length < 3) return hideCursorCoord();
+
+      const center = map.getCenter();
+      const cosLat = Math.cos((center.lat * Math.PI) / 180);
+      const metersPerPixel =
+        (156543.03392 * cosLat) / Math.pow(2, map.getZoom());
+      const stepM =
+        settings.gridStep === "auto"
+          ? pickStepMeters(metersPerPixel)
+          : settings.gridStep;
+      const stepLat = stepM / 111320;
+      const stepLng = stepM / (111320 * Math.max(cosLat, 1e-6));
+
+      const lats = playArea.points.map((p) => p[0]);
+      const lngs = playArea.points.map((p) => p[1]);
+      const paMinLat = Math.min(...lats);
+      const paMaxLat = Math.max(...lats);
+      const paMinLng = Math.min(...lngs);
+      const paMaxLng = Math.max(...lngs);
+
+      const colStart = Math.floor(paMinLng / stepLng) * stepLng;
+      const colEnd = Math.ceil(paMaxLng / stepLng) * stepLng;
+      const rowStart = Math.floor(paMinLat / stepLat) * stepLat;
+      const rowEnd = Math.ceil(paMaxLat / stepLat) * stepLat;
+      const numCols = Math.round((colEnd - colStart) / stepLng);
+      const numRows = Math.round((rowEnd - rowStart) / stepLat);
+
+      const i = Math.floor((e.latlng.lng - colStart) / stepLng);
+      const j = Math.floor((e.latlng.lat - rowStart) / stepLat);
+
+      if (i < 0 || i >= numCols || j < 0 || j >= numRows) return hideCursorCoord();
+
+      cursorCoordEl.textContent = `${colLabel(i)}${numRows - j}`;
+      cursorCoordEl.style.left = `${e.containerPoint.x + 14}px`;
+      cursorCoordEl.style.top = `${e.containerPoint.y + 14}px`;
+      cursorCoordEl.classList.add("is-visible");
+    }
+
+    map.on("mousemove", updateCursorCoord);
+    map.on("mouseout", hideCursorCoord);
+    subscribeSettings((s) => {
+      if (!s.showGrid || !s.showCursorCoords) hideCursorCoord();
+    });
+    // Redraw labels when the play-area zone changes (created, moved,
+    // toggled isPlayArea, deleted).
+    let lastPlayAreaSig = "";
+    subscribeZones((s) => {
+      const pa = s.zones.find((z) => z.isPlayArea);
+      const sig = pa ? `${pa.id}|${JSON.stringify(pa.points)}` : "";
+      if (sig === lastPlayAreaSig) return;
+      lastPlayAreaSig = sig;
+      drawGrid();
+    });
 
     const initView = (): void => {
       const boot = window.__opsMapBoot;
@@ -110,20 +394,83 @@ import { update } from "../lib/storage";
 
     // --- Place mode ---
     function applyPlacingClass(): void {
-      const { mode } = getMarkersState();
-      container!.classList.toggle("is-placing", mode === "placing");
+      const placing =
+        getMarkersState().mode === "placing" ||
+        getZonesState().mode === "placing" ||
+        getTextsState().mode === "placing";
+      container!.classList.toggle("is-placing", placing);
     }
     applyPlacingClass();
     subscribeMarkers(applyPlacingClass);
+    subscribeZones(applyPlacingClass);
+    subscribeTexts(applyPlacingClass);
+
+    // Toggle Leaflet's double-click zoom: must be off while a zone is
+    // being placed, otherwise the close-polygon dblclick zooms the map.
+    function applyDoubleClickZoom(): void {
+      if (getZonesState().mode === "placing") map.doubleClickZoom.disable();
+      else map.doubleClickZoom.enable();
+    }
+    applyDoubleClickZoom();
+    subscribeZones(applyDoubleClickZoom);
+
+    // Pending click handler so that a dblclick can cancel the trailing
+    // single-click that would otherwise add a vertex.
+    let pendingZoneClick: number | null = null;
 
     map.on("click", (e) => {
-      const state = getMarkersState();
-      if (state.mode === "placing") {
-        createMarker(e.latlng.lat, e.latlng.lng, state.draft);
+      const zoneState = getZonesState();
+      if (zoneState.mode === "placing") {
+        if (pendingZoneClick !== null) clearTimeout(pendingZoneClick);
+        const { lat, lng } = e.latlng;
+        pendingZoneClick = window.setTimeout(() => {
+          addDraftPoint(lat, lng);
+          pendingZoneClick = null;
+        }, 250);
         return;
       }
-      if (state.selectedId !== null) {
-        selectMarker(null);
+
+      const textState = getTextsState();
+      if (textState.mode === "placing") {
+        createText(e.latlng.lat, e.latlng.lng, textState.draft);
+        return;
+      }
+
+      const markerState = getMarkersState();
+      if (markerState.mode === "placing") {
+        createMarker(e.latlng.lat, e.latlng.lng, markerState.draft);
+        return;
+      }
+
+      if (markerState.selectedId !== null) selectMarker(null);
+      if (zoneState.selectedId !== null) selectZone(null);
+      if (textState.selectedId !== null) selectText(null);
+    });
+
+    map.on("dblclick", (e) => {
+      const zoneState = getZonesState();
+      if (zoneState.mode !== "placing") return;
+      L.DomEvent.stopPropagation(e);
+      if (pendingZoneClick !== null) {
+        clearTimeout(pendingZoneClick);
+        pendingZoneClick = null;
+      }
+      finishDraft(); // no-op if < 3 points
+      if (getZonesState().mode === "placing") setZoneMode("idle");
+    });
+
+    document.addEventListener("keydown", (e) => {
+      const zoneState = getZonesState();
+      if (zoneState.mode !== "placing") return;
+      const target = e.target as HTMLElement | null;
+      const inField =
+        target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA");
+      if (e.key === "Enter" && !inField) {
+        e.preventDefault();
+        finishDraft();
+        if (getZonesState().mode === "placing") setZoneMode("idle");
+      } else if (e.key === "Escape" && !inField) {
+        setZoneMode("idle");
       }
     });
   }

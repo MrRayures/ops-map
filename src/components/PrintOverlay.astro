@@ -1,0 +1,45 @@
+---
+import Printer from "@lucide/astro/icons/printer";
+import X from "@lucide/astro/icons/x";
+---
+
+<div id="print-overlay" class="c-print" role="region" aria-label="Aperçu d'impression">
+  <div class="c-print-band" data-print-band>
+    <span><span aria-hidden="true">// </span><span data-print-op></span></span>
+    <span><span data-print-terrain></span><span aria-hidden="true"> //</span></span>
+  </div>
+
+  <div class="c-print-stage">
+    <div class="c-print-frame" data-print-frame data-orientation="landscape">
+      <span class="c-print-frame-tag"><span aria-hidden="true">// </span>Zone d'impression</span>
+
+      <div class="c-print-compass" data-print-compass aria-hidden="true">
+        <svg viewBox="0 0 48 48" width="40" height="40">
+          <circle cx="24" cy="24" r="22" fill="rgba(0,0,0,0.45)" stroke="currentColor" stroke-width="2" />
+          <polygon points="24,6 28,24 24,20 20,24" fill="currentColor" />
+          <polygon points="24,42 20,24 24,28 28,24" fill="none" stroke="currentColor" stroke-width="1" />
+          <text x="24" y="15" text-anchor="middle" font-size="8" font-weight="700" fill="currentColor">N</text>
+          <text x="24" y="44" text-anchor="middle" font-size="6" fill="currentColor">S</text>
+          <text x="44" y="27" text-anchor="middle" font-size="6" fill="currentColor">E</text>
+          <text x="5" y="27" text-anchor="middle" font-size="6" fill="currentColor">O</text>
+        </svg>
+      </div>
+
+      <div class="c-print-legend" data-print-legend>
+        <span class="c-print-legend-title">Légende</span>
+        <span class="c-print-legend-empty">—</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="c-print-actions" data-print-actions>
+    <button type="button" data-action="print-now" class="c-print-btn" data-variant="primary">
+      <Printer size={16} aria-hidden="true" />
+      Imprimer
+    </button>
+    <button type="button" data-action="print-exit" class="c-print-btn">
+      <X size={16} aria-hidden="true" />
+      Quitter
+    </button>
+  </div>
+</div>

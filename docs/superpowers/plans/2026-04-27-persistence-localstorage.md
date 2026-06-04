@@ -48,7 +48,7 @@ declare global {
   }
 }
 
-const STORAGE_KEY = "ops-map:state";
+const STORAGE_KEY = 'ops-map:state';
 const SCHEMA_VERSION = 1;
 
 export interface PersistedState {
@@ -65,26 +65,26 @@ function isLatLng(value: unknown): value is [number, number] {
   return (
     Array.isArray(value) &&
     value.length === 2 &&
-    typeof value[0] === "number" &&
-    typeof value[1] === "number"
+    typeof value[0] === 'number' &&
+    typeof value[1] === 'number'
   );
 }
 
 function isValidState(raw: unknown): raw is PersistedState {
-  if (typeof raw !== "object" || raw === null) return false;
+  if (typeof raw !== 'object' || raw === null) return false;
   const obj = raw as Record<string, unknown>;
   if (obj.version !== 1) return false;
-  if (typeof obj.savedAt !== "string") return false;
-  if (typeof obj.title !== "string") return false;
-  if (typeof obj.view !== "object" || obj.view === null) return false;
+  if (typeof obj.savedAt !== 'string') return false;
+  if (typeof obj.title !== 'string') return false;
+  if (typeof obj.view !== 'object' || obj.view === null) return false;
   const view = obj.view as Record<string, unknown>;
   if (!isLatLng(view.center)) return false;
-  if (typeof view.zoom !== "number") return false;
+  if (typeof view.zoom !== 'number') return false;
   return true;
 }
 
 function migrate(raw: unknown): PersistedState | null {
-  if (typeof raw !== "object" || raw === null) return null;
+  if (typeof raw !== 'object' || raw === null) return null;
   const version = (raw as { version?: unknown }).version;
   if (version === SCHEMA_VERSION) {
     return isValidState(raw) ? raw : null;
@@ -105,7 +105,7 @@ function load(): PersistedState | null {
   try {
     parsed = JSON.parse(raw);
   } catch {
-    console.warn("[storage] corrupted state in localStorage, ignoring");
+    console.warn('[storage] corrupted state in localStorage, ignoring');
     return null;
   }
   return migrate(parsed);
@@ -115,7 +115,7 @@ function save(state: PersistedState): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch (err) {
-    console.warn("[storage] write failed", err);
+    console.warn('[storage] write failed', err);
   }
 }
 ```
@@ -164,14 +164,14 @@ export function bootstrap(defaults: PersistedState): {
 
 export function getCurrent(): PersistedState {
   if (current === null) {
-    throw new Error("[storage] getCurrent called before bootstrap");
+    throw new Error('[storage] getCurrent called before bootstrap');
   }
   return current;
 }
 
-export function update(patch: Partial<Omit<PersistedState, "version">>): void {
+export function update(patch: Partial<Omit<PersistedState, 'version'>>): void {
   if (current === null) {
-    throw new Error("[storage] update called before bootstrap");
+    throw new Error('[storage] update called before bootstrap');
   }
   current = {
     ...current,
@@ -228,11 +228,11 @@ Add at the end of `src/lib/storage.ts`:
 function slugifyTitle(title: string): string {
   const slug = title
     .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "") // strip combining diacritics
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-  return slug || "operation";
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '') // strip combining diacritics
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return slug || 'operation';
 }
 
 function todayIso(): string {
@@ -241,12 +241,12 @@ function todayIso(): string {
 
 export function exportToFile(): void {
   if (current === null) {
-    throw new Error("[storage] exportToFile called before bootstrap");
+    throw new Error('[storage] exportToFile called before bootstrap');
   }
   const json = JSON.stringify(current, null, 2);
-  const blob = new Blob([json], { type: "application/json" });
+  const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
+  const a = document.createElement('a');
   a.href = url;
   a.download = `ops-map-${slugifyTitle(current.title)}-${todayIso()}.json`;
   document.body.appendChild(a);
@@ -261,16 +261,16 @@ export function importFromFile(file: File): Promise<PersistedState> {
     try {
       parsed = JSON.parse(text);
     } catch {
-      throw new Error("Fichier invalide");
+      throw new Error('Fichier invalide');
     }
     const migrated = migrate(parsed);
     if (migrated === null) {
       // Distinguish version mismatch from structural invalid
       const version = (parsed as { version?: unknown } | null)?.version;
       if (version !== undefined && version !== SCHEMA_VERSION) {
-        throw new Error("Version non supportée");
+        throw new Error('Version non supportée');
       }
-      throw new Error("Fichier invalide");
+      throw new Error('Fichier invalide');
     }
     return migrated;
   });
@@ -358,8 +358,8 @@ git commit -m "feat(storage): add exportToFile and importFromFile"
 Modify `src/styles/global.css` by adding the import line in the components block (after `marker.css`):
 
 ```css
-@import "./components/marker.css";
-@import "./components/toast.css";
+@import './components/marker.css';
+@import './components/toast.css';
 ```
 
 - [ ] **Step 4 : Run type check**
@@ -402,9 +402,9 @@ Replace the `actionItems` constant:
 
 ```ts
 const actionItems = [
-  { id: "save", label: "Sauvegarder", Icon: Save },
-  { id: "export", label: "Exporter", Icon: Download },
-  { id: "import", label: "Importer", Icon: Upload },
+  { id: 'save', label: 'Sauvegarder', Icon: Save },
+  { id: 'export', label: 'Exporter', Icon: Download },
+  { id: 'import', label: 'Importer', Icon: Upload },
 ] as const;
 ```
 
@@ -460,13 +460,11 @@ b) Render the Toast at the end of `<body>`, just before the closing `</body>` ta
 c) In the `<script>` block at the bottom, replace the entire current script with the bootstrap-aware version. The full new script body (replaces lines 101-143) :
 
 ```ts
-import { bootstrap, update, type PersistedState } from "../lib/storage";
+import { bootstrap, update, type PersistedState } from '../lib/storage';
 
-const titleText = document.querySelector<HTMLElement>("[data-title-text]");
-const titleInput = document.querySelector<HTMLInputElement>("#op-title");
-const editBtn = document.querySelector<HTMLButtonElement>(
-  'button[data-action="edit-title"]',
-);
+const titleText = document.querySelector<HTMLElement>('[data-title-text]');
+const titleInput = document.querySelector<HTMLInputElement>('#op-title');
+const editBtn = document.querySelector<HTMLButtonElement>('button[data-action="edit-title"]');
 const validateBtn = document.querySelector<HTMLButtonElement>(
   'button[data-action="validate-title"]',
 );
@@ -476,7 +474,7 @@ if (titleText && titleInput && editBtn && validateBtn) {
   const defaults: PersistedState = {
     version: 1,
     savedAt: new Date().toISOString(),
-    title: titleText.textContent ?? "",
+    title: titleText.textContent ?? '',
     view: { center: [46.2, 2.2], zoom: 6 },
   };
 
@@ -488,10 +486,10 @@ if (titleText && titleInput && editBtn && validateBtn) {
 
   // Expose initial view for Map.astro and notify it
   window.__opsMapBoot = { view: state.view, restored };
-  window.dispatchEvent(new Event("ops-map:boot"));
+  window.dispatchEvent(new Event('ops-map:boot'));
 
   const enterEditMode = (): void => {
-    titleInput.value = titleText.textContent ?? "";
+    titleInput.value = titleText.textContent ?? '';
     titleText.hidden = true;
     editBtn.hidden = true;
     titleInput.hidden = false;
@@ -511,14 +509,14 @@ if (titleText && titleInput && editBtn && validateBtn) {
     update({ title: newTitle });
   };
 
-  editBtn.addEventListener("click", enterEditMode);
-  validateBtn.addEventListener("click", exitEditMode);
-  titleInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
+  editBtn.addEventListener('click', enterEditMode);
+  validateBtn.addEventListener('click', exitEditMode);
+  titleInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
       e.preventDefault();
       exitEditMode();
-    } else if (e.key === "Escape") {
-      titleInput.value = titleText.textContent ?? "";
+    } else if (e.key === 'Escape') {
+      titleInput.value = titleText.textContent ?? '';
       exitEditMode();
     }
   });
@@ -564,7 +562,7 @@ In `src/components/Map.astro`, modify the `<script>` block.
 a) Add the import (after the existing `markers-store` import) :
 
 ```ts
-import { update } from "../lib/storage";
+import { update } from '../lib/storage';
 ```
 
 b) Replace lines 62-67 (the current view-init block reading `container.dataset.center / zoom / bounds`) with :
@@ -588,14 +586,14 @@ const initView = (): void => {
 if (window.__opsMapBoot) {
   initView();
 } else {
-  window.addEventListener("ops-map:boot", initView, { once: true });
+  window.addEventListener('ops-map:boot', initView, { once: true });
 }
 ```
 
 c) Add a `moveend` listener — append it just after the `map.on("click", ...)` handler (around line 108) :
 
 ```ts
-map.on("moveend", () => {
+map.on('moveend', () => {
   const c = map.getCenter();
   update({ view: { center: [c.lat, c.lng], zoom: map.getZoom() } });
 });
@@ -647,8 +645,8 @@ import {
   exportToFile,
   importFromFile,
   type PersistedState,
-} from "../lib/storage";
-import { whenMapReady } from "../lib/leaflet-map-ref";
+} from '../lib/storage';
+import { whenMapReady } from '../lib/leaflet-map-ref';
 ```
 
 Then add the wiring + helpers (paste at the end of the `if (titleText && ...)` block) :
@@ -657,7 +655,7 @@ Then add the wiring + helpers (paste at the end of the `if (titleText && ...)` b
 // --- Toast helper ---
 let toastTimer: number | null = null;
 const showToast = (message: string): void => {
-  const el = document.getElementById("toast");
+  const el = document.getElementById('toast');
   if (!el) return;
   el.textContent = message;
   el.hidden = false;
@@ -680,50 +678,44 @@ const applyState = (next: PersistedState): void => {
 };
 
 // --- Sauvegarder ---
-const saveBtn = document.querySelector<HTMLButtonElement>(
-  'button[data-action="save"]',
-);
-saveBtn?.addEventListener("click", () => {
+const saveBtn = document.querySelector<HTMLButtonElement>('button[data-action="save"]');
+saveBtn?.addEventListener('click', () => {
   if (!titleInput.hidden) {
     // Force exit edit mode so the in-progress value gets persisted
     exitEditMode();
   }
   saveNow();
-  showToast("Sauvegardé");
+  showToast('Sauvegardé');
 });
 
 // --- Exporter ---
-const exportBtn = document.querySelector<HTMLButtonElement>(
-  'button[data-action="export"]',
-);
-exportBtn?.addEventListener("click", () => {
+const exportBtn = document.querySelector<HTMLButtonElement>('button[data-action="export"]');
+exportBtn?.addEventListener('click', () => {
   exportToFile();
 });
 
 // --- Importer ---
-const fileInput = document.createElement("input");
-fileInput.type = "file";
-fileInput.accept = "application/json,.json";
+const fileInput = document.createElement('input');
+fileInput.type = 'file';
+fileInput.accept = 'application/json,.json';
 
-const importBtn = document.querySelector<HTMLButtonElement>(
-  'button[data-action="import"]',
-);
-importBtn?.addEventListener("click", () => {
+const importBtn = document.querySelector<HTMLButtonElement>('button[data-action="import"]');
+importBtn?.addEventListener('click', () => {
   if (!confirm("Remplacer l'opération en cours ?")) return;
   fileInput.click();
 });
 
-fileInput.addEventListener("change", async () => {
+fileInput.addEventListener('change', async () => {
   const file = fileInput.files?.[0];
   if (!file) return;
   try {
     const next = await importFromFile(file);
     applyState(next);
-    showToast("Importé");
+    showToast('Importé');
   } catch (err) {
-    alert(err instanceof Error ? err.message : "Fichier invalide");
+    alert(err instanceof Error ? err.message : 'Fichier invalide');
   } finally {
-    fileInput.value = ""; // allow re-importing the same file
+    fileInput.value = ''; // allow re-importing the same file
   }
 });
 ```

@@ -56,32 +56,32 @@ src/styles/global.css                      @import "./components/marker.css";
 - [ ] **Step 1: Create the file**
 
 ```ts
-export type MarkerShape = "square" | "triangle" | "circle" | "diamond";
+export type MarkerShape = 'square' | 'triangle' | 'circle' | 'diamond';
 
 export type MarkerColor =
-  | "team-red"
-  | "team-blue"
-  | "team-green"
-  | "team-purple"
-  | "marker-objective"
-  | "marker-spawn"
-  | "marker-danger"
-  | "marker-cover";
+  | 'team-red'
+  | 'team-blue'
+  | 'team-green'
+  | 'team-purple'
+  | 'marker-objective'
+  | 'marker-spawn'
+  | 'marker-danger'
+  | 'marker-cover';
 
 export type MarkerIconId =
-  | "flag"
-  | "target"
-  | "shield"
-  | "eye"
-  | "alert-triangle"
-  | "swords"
-  | "radio"
-  | "package";
+  | 'flag'
+  | 'target'
+  | 'shield'
+  | 'eye'
+  | 'alert-triangle'
+  | 'swords'
+  | 'radio'
+  | 'package';
 
 export type MarkerContent =
-  | { kind: "none" }
-  | { kind: "text"; value: string }
-  | { kind: "icon"; value: MarkerIconId };
+  | { kind: 'none' }
+  | { kind: 'text'; value: string }
+  | { kind: 'icon'; value: MarkerIconId };
 
 export interface Marker {
   id: string;
@@ -93,42 +93,37 @@ export interface Marker {
   label?: string;
 }
 
-export type MarkerDraft = Omit<Marker, "id" | "lat" | "lng">;
+export type MarkerDraft = Omit<Marker, 'id' | 'lat' | 'lng'>;
 
-export const MARKER_SHAPES: readonly MarkerShape[] = [
-  "square",
-  "triangle",
-  "circle",
-  "diamond",
-];
+export const MARKER_SHAPES: readonly MarkerShape[] = ['square', 'triangle', 'circle', 'diamond'];
 
 export const MARKER_COLORS: readonly MarkerColor[] = [
-  "team-red",
-  "team-blue",
-  "team-green",
-  "team-purple",
-  "marker-objective",
-  "marker-spawn",
-  "marker-danger",
-  "marker-cover",
+  'team-red',
+  'team-blue',
+  'team-green',
+  'team-purple',
+  'marker-objective',
+  'marker-spawn',
+  'marker-danger',
+  'marker-cover',
 ];
 
 export const MARKER_ICONS: readonly MarkerIconId[] = [
-  "flag",
-  "target",
-  "shield",
-  "eye",
-  "alert-triangle",
-  "swords",
-  "radio",
-  "package",
+  'flag',
+  'target',
+  'shield',
+  'eye',
+  'alert-triangle',
+  'swords',
+  'radio',
+  'package',
 ];
 
 export const DEFAULT_MARKER_DRAFT: MarkerDraft = {
-  shape: "square",
-  color: "team-red",
-  content: { kind: "none" },
-  label: "",
+  shape: 'square',
+  color: 'team-red',
+  content: { kind: 'none' },
+  label: '',
 };
 
 export const MARKER_TEXT_MAX_LENGTH = 3;
@@ -196,7 +191,7 @@ Open each of the 8 .svg files and extract the **inner** content (drop the `<svg 
 Create `src/data/marker-icons.ts`:
 
 ```ts
-import type { MarkerIconId } from "./markers";
+import type { MarkerIconId } from './markers';
 
 /**
  * Inner SVG content (paths/lines/circles) extracted from @lucide/astro
@@ -215,7 +210,7 @@ export const MARKER_ICON_INNER_SVG: Record<MarkerIconId, string> = {
   target: `/* paste from target.svg */`,
   shield: `/* paste from shield.svg */`,
   eye: `/* paste from eye.svg */`,
-  "alert-triangle": `/* paste from alert-triangle.svg (or triangle-alert.svg) */`,
+  'alert-triangle': `/* paste from alert-triangle.svg (or triangle-alert.svg) */`,
   swords: `/* paste from swords.svg */`,
   radio: `/* paste from radio.svg */`,
   package: `/* paste from package.svg */`,
@@ -226,10 +221,7 @@ export const MARKER_ICON_INNER_SVG: Record<MarkerIconId, string> = {
  * provided className. Width/height defaults to 16 — the marker body is
  * 32px and we want the icon ~50% of body size.
  */
-export function buildIconSvg(
-  id: MarkerIconId,
-  className = "c-marker-icon",
-): string {
+export function buildIconSvg(id: MarkerIconId, className = 'c-marker-icon'): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${className}" aria-hidden="true">${MARKER_ICON_INNER_SVG[id]}</svg>`;
 }
 ```
@@ -275,13 +267,9 @@ The directory `src/lib/` does not exist yet. Creating the file via the Write too
 Create `src/lib/markers-store.ts`:
 
 ```ts
-import {
-  DEFAULT_MARKER_DRAFT,
-  type Marker,
-  type MarkerDraft,
-} from "../data/markers";
+import { DEFAULT_MARKER_DRAFT, type Marker, type MarkerDraft } from '../data/markers';
 
-export type MarkerMode = "idle" | "placing";
+export type MarkerMode = 'idle' | 'placing';
 
 export interface MarkersState {
   readonly markers: readonly Marker[];
@@ -297,7 +285,7 @@ const listeners = new Set<Listener>();
 let state: MarkersState = {
   markers: [],
   selectedId: null,
-  mode: "idle",
+  mode: 'idle',
   draft: { ...DEFAULT_MARKER_DRAFT },
 };
 
@@ -330,20 +318,16 @@ export function updateDraft(patch: Partial<MarkerDraft>): void {
   setState({ draft: { ...state.draft, ...patch } });
 }
 
-export function createMarker(
-  lat: number,
-  lng: number,
-  draft: MarkerDraft,
-): Marker {
+export function createMarker(lat: number, lng: number, draft: MarkerDraft): Marker {
   const id =
-    typeof crypto !== "undefined" && "randomUUID" in crypto
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto
       ? crypto.randomUUID()
       : `m-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
   const marker: Marker = { id, lat, lng, ...draft };
   setState({
     markers: [...state.markers, marker],
     selectedId: id,
-    mode: "idle",
+    mode: 'idle',
   });
   return marker;
 }
@@ -356,18 +340,14 @@ export function selectMarker(id: string | null): void {
 export function updateSelected(patch: Partial<MarkerDraft>): void {
   if (state.selectedId === null) return;
   setState({
-    markers: state.markers.map((m) =>
-      m.id === state.selectedId ? { ...m, ...patch } : m,
-    ),
+    markers: state.markers.map((m) => (m.id === state.selectedId ? { ...m, ...patch } : m)),
   });
 }
 
 export function moveSelected(lat: number, lng: number): void {
   if (state.selectedId === null) return;
   setState({
-    markers: state.markers.map((m) =>
-      m.id === state.selectedId ? { ...m, lat, lng } : m,
-    ),
+    markers: state.markers.map((m) => (m.id === state.selectedId ? { ...m, lat, lng } : m)),
   });
 }
 
@@ -535,24 +515,24 @@ Use the Read tool to get its current content (it should have ~11 lines: 1 tailwi
 In `src/styles/global.css`, after the existing `@import "./components/pin.css";` line, add:
 
 ```css
-@import "./components/marker.css";
+@import './components/marker.css';
 ```
 
 The full `global.css` now reads:
 
 ```css
-@import "tailwindcss";
-@import "./tokens.css";
+@import 'tailwindcss';
+@import './tokens.css';
 
-@import "@fontsource-variable/inter";
-@import "@fontsource-variable/jetbrains-mono";
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/jetbrains-mono';
 
-@import "./primitives.css";
+@import './primitives.css';
 
-@import "./components/corner-brackets.css";
-@import "./components/grid-overlay.css";
-@import "./components/pin.css";
-@import "./components/marker.css";
+@import './components/corner-brackets.css';
+@import './components/grid-overlay.css';
+@import './components/pin.css';
+@import './components/marker.css';
 ```
 
 - [ ] **Step 4: Verify build picks up the marker CSS**
@@ -597,8 +577,8 @@ Use the Read tool on `src/pages/styleguide.astro`. Find the closing `</section>`
 In the frontmatter (after the existing component imports), add:
 
 ```ts
-import { MARKER_SHAPES, MARKER_COLORS, MARKER_ICONS } from "../data/markers";
-import { buildIconSvg } from "../data/marker-icons";
+import { MARKER_SHAPES, MARKER_COLORS, MARKER_ICONS } from '../data/markers';
+import { buildIconSvg } from '../data/marker-icons';
 ```
 
 - [ ] **Step 3: Insert the §I section**
@@ -968,12 +948,12 @@ npm run dev
 Then in the browser at `http://localhost:4321/`, open devtools console and run:
 
 ```js
-const store = await import("/src/lib/markers-store.ts");
+const store = await import('/src/lib/markers-store.ts');
 store.createMarker(48.8566, 2.3522, {
-  shape: "square",
-  color: "team-red",
-  content: { kind: "text", value: "PA" },
-  label: "Paris",
+  shape: 'square',
+  color: 'team-red',
+  content: { kind: 'text', value: 'PA' },
+  label: 'Paris',
 });
 ```
 
@@ -1133,7 +1113,7 @@ Read `src/components/PanelGroup.astro`. Find the `panels.map` block. The current
 In the frontmatter, add the import:
 
 ```ts
-import MarkerEditor from "./MarkerEditor.astro";
+import MarkerEditor from './MarkerEditor.astro';
 ```
 
 In the template, after the existing `{panel.id === "address" && <AddressSearch />}` (or wherever it sits), add:
@@ -1199,13 +1179,9 @@ When the store mode is `placing`:
 Add the imports and the place-mode handler. Find the script's existing imports near the top:
 
 ```ts
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-import {
-  mapStyles,
-  defaultMapStyle,
-  type MapStyleId,
-} from "../data/map-styles";
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import { mapStyles, defaultMapStyle, type MapStyleId } from '../data/map-styles';
 ```
 
 Add below them:
@@ -1215,7 +1191,7 @@ import {
   subscribe as subscribeMarkers,
   getState as getMarkersState,
   createMarker,
-} from "../lib/markers-store";
+} from '../lib/markers-store';
 ```
 
 Then, find the `if (container) { const map = L.map(container); ...` block. After all the existing handlers (radio change, ResizeObserver, map:fly listener), and before the final `}` that closes the `if (container)` block, add:
@@ -1224,14 +1200,14 @@ Then, find the `if (container) { const map = L.map(container); ...` block. After
 // --- Place mode ---
 function applyPlacingClass(): void {
   const { mode } = getMarkersState();
-  container!.classList.toggle("is-placing", mode === "placing");
+  container!.classList.toggle('is-placing', mode === 'placing');
 }
 applyPlacingClass();
 subscribeMarkers(applyPlacingClass);
 
-map.on("click", (e) => {
+map.on('click', (e) => {
   const { mode, draft } = getMarkersState();
-  if (mode !== "placing") return;
+  if (mode !== 'placing') return;
   createMarker(e.latlng.lat, e.latlng.lng, draft);
 });
 ```
@@ -1595,8 +1571,8 @@ In `src/components/MarkerEditor.astro`, find the existing `<fieldset>` for "Coul
 In the frontmatter, add to existing imports:
 
 ```ts
-import { MARKER_ICONS } from "../data/markers";
-import { buildIconSvg } from "../data/marker-icons";
+import { MARKER_ICONS } from '../data/markers';
+import { buildIconSvg } from '../data/marker-icons';
 ```
 
 Still in the frontmatter, define `iconPickerHtml` so the script can inject it (Astro doesn't run scripts at SSG, so we need to render the icon buttons either in the template or via a server-time string we pass to the script).
@@ -1632,11 +1608,9 @@ Inside the `<script>` block, **after** the existing element queries (`shapeBtns`
 const contentKindBtns = root.querySelectorAll<HTMLButtonElement>(
   'button[data-field="content-kind"]',
 );
-const contentTextWrap = root.querySelector<HTMLElement>("[data-content-text]")!;
-const contentIconWrap = root.querySelector<HTMLElement>("[data-content-icon]")!;
-const contentTextInput = root.querySelector<HTMLInputElement>(
-  'input[data-field="content-text"]',
-)!;
+const contentTextWrap = root.querySelector<HTMLElement>('[data-content-text]')!;
+const contentIconWrap = root.querySelector<HTMLElement>('[data-content-icon]')!;
+const contentTextInput = root.querySelector<HTMLInputElement>('input[data-field="content-text"]')!;
 const contentIconBtns = root.querySelectorAll<HTMLButtonElement>(
   'button[data-field="content-icon"]',
 );
@@ -1645,55 +1619,44 @@ const contentIconBtns = root.querySelectorAll<HTMLButtonElement>(
 Then add the import for `MarkerContent` and `MarkerIconId` at the top of the script:
 
 ```ts
-import type {
-  MarkerColor,
-  MarkerContent,
-  MarkerIconId,
-  MarkerShape,
-} from "../data/markers";
+import type { MarkerColor, MarkerContent, MarkerIconId, MarkerShape } from '../data/markers';
 ```
 
 Add the event handlers (after the existing color button loop, before the label input listener):
 
 ```ts
 for (const btn of contentKindBtns) {
-  btn.addEventListener("click", () => {
-    const kind = btn.dataset.value as MarkerContent["kind"];
+  btn.addEventListener('click', () => {
+    const kind = btn.dataset.value as MarkerContent['kind'];
     let content: MarkerContent;
     const { selectedId, draft, markers } = getState();
-    const source = selectedId
-      ? markers.find((m) => m.id === selectedId)
-      : draft;
-    if (kind === "none") {
-      content = { kind: "none" };
-    } else if (kind === "text") {
-      const value =
-        source && source.content.kind === "text" ? source.content.value : "";
-      content = { kind: "text", value };
+    const source = selectedId ? markers.find((m) => m.id === selectedId) : draft;
+    if (kind === 'none') {
+      content = { kind: 'none' };
+    } else if (kind === 'text') {
+      const value = source && source.content.kind === 'text' ? source.content.value : '';
+      content = { kind: 'text', value };
     } else {
-      const value =
-        source && source.content.kind === "icon"
-          ? source.content.value
-          : "flag";
-      content = { kind: "icon", value };
+      const value = source && source.content.kind === 'icon' ? source.content.value : 'flag';
+      content = { kind: 'icon', value };
     }
     if (selectedId) updateSelected({ content });
     else updateDraft({ content });
   });
 }
 
-contentTextInput.addEventListener("input", () => {
+contentTextInput.addEventListener('input', () => {
   const value = contentTextInput.value.slice(0, 3);
-  const content: MarkerContent = { kind: "text", value };
+  const content: MarkerContent = { kind: 'text', value };
   const { selectedId } = getState();
   if (selectedId) updateSelected({ content });
   else updateDraft({ content });
 });
 
 for (const btn of contentIconBtns) {
-  btn.addEventListener("click", () => {
+  btn.addEventListener('click', () => {
     const value = btn.dataset.value as MarkerIconId;
-    const content: MarkerContent = { kind: "icon", value };
+    const content: MarkerContent = { kind: 'icon', value };
     const { selectedId } = getState();
     if (selectedId) updateSelected({ content });
     else updateDraft({ content });
@@ -1707,22 +1670,19 @@ Update the `render()` function to also reflect the content state. Inside `render
 // Reflect content kind + sub-controls
 const kind = data.content.kind;
 for (const btn of contentKindBtns) {
-  btn.setAttribute("aria-checked", String(btn.dataset.value === kind));
+  btn.setAttribute('aria-checked', String(btn.dataset.value === kind));
 }
-contentTextWrap.hidden = kind !== "text";
-contentIconWrap.hidden = kind !== "icon";
+contentTextWrap.hidden = kind !== 'text';
+contentIconWrap.hidden = kind !== 'icon';
 
-if (kind === "text") {
+if (kind === 'text') {
   if (contentTextInput.value !== data.content.value) {
     contentTextInput.value = data.content.value;
   }
 }
-if (kind === "icon") {
+if (kind === 'icon') {
   for (const btn of contentIconBtns) {
-    btn.setAttribute(
-      "aria-checked",
-      String(btn.dataset.value === data.content.value),
-    );
+    btn.setAttribute('aria-checked', String(btn.dataset.value === data.content.value));
   }
 }
 ```
@@ -1775,9 +1735,9 @@ This task verifies the integration end-to-end and adds the **deselect-on-map-bac
 In `src/components/Map.astro`, find the place-mode click handler added in Task 9:
 
 ```ts
-map.on("click", (e) => {
+map.on('click', (e) => {
   const { mode, draft } = getMarkersState();
-  if (mode !== "placing") return;
+  if (mode !== 'placing') return;
   createMarker(e.latlng.lat, e.latlng.lng, draft);
 });
 ```
@@ -1785,9 +1745,9 @@ map.on("click", (e) => {
 Replace with:
 
 ```ts
-map.on("click", (e) => {
+map.on('click', (e) => {
   const state = getMarkersState();
-  if (state.mode === "placing") {
+  if (state.mode === 'placing') {
     createMarker(e.latlng.lat, e.latlng.lng, state.draft);
     return;
   }
@@ -1805,7 +1765,7 @@ import {
   getState as getMarkersState,
   createMarker,
   selectMarker,
-} from "../lib/markers-store";
+} from '../lib/markers-store';
 ```
 
 - [ ] **Step 2: Verify build**
@@ -1895,10 +1855,8 @@ The button uses the existing `ghost` variant — to color the text in danger red
 In the `<script>` block, after the existing element queries, add:
 
 ```ts
-const deleteWrap = root.querySelector<HTMLElement>("[data-delete-wrap]")!;
-const deleteBtn = root.querySelector<HTMLButtonElement>(
-  'button[data-action="delete"]',
-)!;
+const deleteWrap = root.querySelector<HTMLElement>('[data-delete-wrap]')!;
+const deleteBtn = root.querySelector<HTMLButtonElement>('button[data-action="delete"]')!;
 ```
 
 Add the import:
@@ -1912,7 +1870,7 @@ import {
   updateSelected,
   selectMarker,
   deleteSelected,
-} from "../lib/markers-store";
+} from '../lib/markers-store';
 ```
 
 (`deleteSelected` is the new addition.)
@@ -1920,7 +1878,7 @@ import {
 Add the click handler (anywhere in the script after the queries):
 
 ```ts
-deleteBtn.addEventListener("click", () => {
+deleteBtn.addEventListener('click', () => {
   deleteSelected();
 });
 ```
@@ -1981,16 +1939,16 @@ marker and clears the selection (the form returns to idle)."
 In the `<script>` block of `src/components/MarkerEditor.astro`, after the existing event listeners, add:
 
 ```ts
-document.addEventListener("keydown", (e) => {
-  if (e.key !== "Escape") return;
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
   // Don't swallow Escape if the user is inside a real input (let them clear it natively)
   const target = e.target as HTMLElement | null;
-  if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) {
+  if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
     return;
   }
   const { mode, selectedId } = getState();
-  if (mode === "placing") {
-    setMode("idle");
+  if (mode === 'placing') {
+    setMode('idle');
   } else if (selectedId) {
     selectMarker(null);
   }

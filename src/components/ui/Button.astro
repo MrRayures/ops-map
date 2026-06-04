@@ -9,6 +9,7 @@ interface Props {
   href?: string;
   disabled?: boolean;
   class?: string;
+  title?: string;
   "aria-label"?: string;
   [key: `data-${string}`]: string | number | boolean | undefined;
 }
@@ -25,12 +26,12 @@ const {
 } = Astro.props;
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex cursor-pointer items-center justify-center gap-2 rounded-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50";
 
 const variantClass: Record<Variant, string> = {
   primary: "bg-accent text-accent-on hover:bg-accent-hover",
   secondary:
-    "border border-line-default bg-transparent text-fg-primary hover:bg-surface-elevated",
+    "border border-line-default bg-surface-card text-fg-primary hover:bg-surface-elevated",
   ghost:
     "bg-transparent text-fg-secondary hover:bg-surface-elevated hover:text-fg-primary",
 };

@@ -35,32 +35,32 @@ persistance.
 ## Modèle de données — `src/data/markers.ts`
 
 ```ts
-export type MarkerShape = "square" | "triangle" | "circle" | "diamond";
+export type MarkerShape = 'square' | 'triangle' | 'circle' | 'diamond';
 
 export type MarkerColor =
-  | "team-red"
-  | "team-blue"
-  | "team-green"
-  | "team-purple"
-  | "marker-objective"
-  | "marker-spawn"
-  | "marker-danger"
-  | "marker-cover";
+  | 'team-red'
+  | 'team-blue'
+  | 'team-green'
+  | 'team-purple'
+  | 'marker-objective'
+  | 'marker-spawn'
+  | 'marker-danger'
+  | 'marker-cover';
 
 export type MarkerIconId =
-  | "flag"
-  | "target"
-  | "shield"
-  | "eye"
-  | "alert-triangle"
-  | "swords"
-  | "radio"
-  | "package";
+  | 'flag'
+  | 'target'
+  | 'shield'
+  | 'eye'
+  | 'alert-triangle'
+  | 'swords'
+  | 'radio'
+  | 'package';
 
 export type MarkerContent =
-  | { kind: "none" }
-  | { kind: "text"; value: string } // 1–3 caractères
-  | { kind: "icon"; value: MarkerIconId };
+  | { kind: 'none' }
+  | { kind: 'text'; value: string } // 1–3 caractères
+  | { kind: 'icon'; value: MarkerIconId };
 
 export interface Marker {
   id: string; // crypto.randomUUID()
@@ -77,11 +77,11 @@ export const MARKER_COLORS: readonly MarkerColor[];
 export const MARKER_ICONS: readonly MarkerIconId[];
 
 export const DEFAULT_MARKER_DRAFT = {
-  shape: "square",
-  color: "team-red",
-  content: { kind: "none" },
-  label: "",
-} satisfies Omit<Marker, "id" | "lat" | "lng">;
+  shape: 'square',
+  color: 'team-red',
+  content: { kind: 'none' },
+  label: '',
+} satisfies Omit<Marker, 'id' | 'lat' | 'lng'>;
 ```
 
 Les 8 icônes Lucide initiales sont un point de départ. Élargir si besoin
@@ -199,10 +199,7 @@ LABEL (optionnel)
 ### Markup d'un marker
 
 ```html
-<div
-  class="c-marker is-shape-square is-color-team-red [is-selected]"
-  data-id="..."
->
+<div class="c-marker is-shape-square is-color-team-red [is-selected]" data-id="...">
   <div class="c-marker-body">
     <span class="c-marker-text">LZ</span>
     <!-- si content.kind = text -->
@@ -221,7 +218,7 @@ Attaché à la carte via :
 L.marker(latlng, {
   icon: L.divIcon({
     html,
-    className: "", // pas de className Leaflet par défaut, on porte tout via le div racine
+    className: '', // pas de className Leaflet par défaut, on porte tout via le div racine
     iconSize: [32, 32], // taille du body (le label HUD déborde en dehors)
     iconAnchor: [16, 16], // centre — la coordonnée du clic correspond au centre du body
   }),

@@ -1,0 +1,274 @@
+---
+// ZoneLayer is a side-effect component: it has no DOM of its own.
+// It renders zones (polygons) on the Leaflet map, plus a play-area
+// mask (dark overlay outside the play polygon), vertex drag handles
+// for the selected zone, and a draft preview during placing mode.
+---
+
+<script>
+  import L from "leaflet";
+  import {
+    subscribe,
+    getState,
+    selectZone,
+    moveSelectedVertex,
+    insertVertexAfter,
+    removeVertex,
+  } from "../lib/zones-store";
+  import { whenMapReady } from "../lib/leaflet-map-ref";
+  import type { Zone } from "../data/zones";
+
+  // World ring used as the outer envelope for the play-area mask.
+  const WORLD_RING: [number, number][] = [
+    [-89.9, -179.9],
+    [-89.9, 179.9],
+    [89.9, 179.9],
+    [89.9, -179.9],
+  ];
+
+  function fillColorVar(z: Zone): string {
+    return `var(--color-${z.color})`;
+  }
+
+  function buildLabelIcon(text: string): L.DivIcon {
+    const safe = text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+    // No iconSize: let the label size itself to its content. The
+    // .c-zone-label CSS handles centering via translate(-50%, -50%).
+    return L.divIcon({
+      html: `<div class="c-zone-label">${safe}</div>`,
+      className: "",
+      iconAnchor: [0, 0],
+    });
+  }
+
+  function buildVertexIcon(): L.DivIcon {
+    return L.divIcon({
+      html: `<div class="c-zone-vertex"></div>`,
+      className: "",
+      iconSize: [12, 12],
+      iconAnchor: [6, 6],
+    });
+  }
+
+  function buildMidpointIcon(): L.DivIcon {
+    return L.divIcon({
+      html: `<div class="c-zone-midpoint"></div>`,
+      className: "",
+      iconSize: [10, 10],
+      iconAnchor: [5, 5],
+    });
+  }
+
+  function buildDraftVertexIcon(): L.DivIcon {
+    return L.divIcon({
+      html: `<div class="c-zone-draft-vertex"></div>`,
+      className: "",
+      iconSize: [8, 8],
+      iconAnchor: [4, 4],
+    });
+  }
+
+  // Polygon centroid (average of vertices — fine for label placement).
+  function centroid(points: readonly [number, number][]): [number, number] {
+    let lat = 0;
+    let lng = 0;
+    for (const p of points) {
+      lat += p[0];
+      lng += p[1];
+    }
+    return [lat / points.length, lng / points.length];
+  }
+
+  whenMapReady((map) => {
+    const zonesGroup = L.layerGroup().addTo(map);
+    const labelsGroup = L.layerGroup().addTo(map);
+    const handlesGroup = L.layerGroup().addTo(map);
+    const draftGroup = L.layerGroup().addTo(map);
+    const maskGroup = L.layerGroup().addTo(map);
+
+    function buildZonePolygon(z: Zone, isSelected: boolean): L.Polygon {
+      const baseWeight = z.isPlayArea ? 5 : 2;
+      const polygon = L.polygon(z.points, {
+        className: `c-zone is-color-${z.color}${z.isPlayArea ? " is-play-area" : ""}`,
+        color: fillColorVar(z),
+        weight: isSelected ? baseWeight + 2 : baseWeight,
+        opacity: 0.9,
+        // Play-area zones are stroke-only: no SVG fill at all, so the
+        // empty interior cannot intercept clicks meant for nested zones
+        // or for placing-mode vertices.
+        fill: !z.isPlayArea,
+        fillColor: fillColorVar(z),
+        fillOpacity: z.isPlayArea ? 0 : 0.25,
+        dashArray: z.isPlayArea ? "16 10" : undefined,
+      });
+      polygon.on("click", (e) => {
+        L.DomEvent.stopPropagation(e);
+        selectZone(z.id);
+      });
+      return polygon;
+    }
+
+    function buildPlayAreaMask(z: Zone): L.Polygon {
+      // Polygon with a hole: outer = world ring, inner = zone points.
+      // Filled with semi-transparent dark color, no stroke. The CSS
+      // class enforces fill-rule: evenodd (so the hole renders no
+      // matter which winding direction the user drew the zone in) and
+      // pointer-events: none (the mask is decorative — clicks must
+      // reach zones nested inside the play area).
+      return L.polygon([WORLD_RING, z.points], {
+        className: "c-zone-mask",
+        color: "#000",
+        weight: 0,
+        opacity: 0,
+        fillColor: "#000",
+        fillOpacity: 0.45,
+        interactive: false,
+      });
+    }
+
+    // Track whether a vertex drag is in progress, so the store-driven
+    // re-render doesn't tear down the live handle mid-gesture.
+    let dragging = false;
+
+    function renderZones(): void {
+      if (dragging) return;
+      const state = getState();
+
+      zonesGroup.clearLayers();
+      labelsGroup.clearLayers();
+      handlesGroup.clearLayers();
+      maskGroup.clearLayers();
+
+      for (const z of state.zones) {
+        const isSelected = state.selectedId === z.id;
+
+        const maskLayer = z.isPlayArea ? buildPlayAreaMask(z) : null;
+        if (maskLayer) maskGroup.addLayer(maskLayer);
+
+        const polygon = buildZonePolygon(z, isSelected);
+        zonesGroup.addLayer(polygon);
+
+        let labelMarker: L.Marker | null = null;
+        if (z.label && z.label.trim().length > 0) {
+          labelMarker = L.marker(centroid(z.points), {
+            icon: buildLabelIcon(z.label),
+            interactive: false,
+          });
+          labelsGroup.addLayer(labelMarker);
+        }
+
+        if (isSelected) {
+          // Mutable vertex array — used during drag to update the polygon
+          // / mask / label without involving the store (which would
+          // trigger a destructive re-render and break the gesture).
+          const livePoints: [number, number][] = z.points.map((p) => [p[0], p[1]]);
+          const canRemove = z.points.length > 3;
+
+          z.points.forEach((p, idx) => {
+            const handle = L.marker(p, {
+              icon: buildVertexIcon(),
+              draggable: true,
+              keyboard: false,
+            });
+            handle.on("dragstart", () => {
+              dragging = true;
+            });
+            handle.on("drag", (e) => {
+              const ll = (e.target as L.Marker).getLatLng();
+              livePoints[idx] = [ll.lat, ll.lng];
+              polygon.setLatLngs(livePoints);
+              if (maskLayer) maskLayer.setLatLngs([WORLD_RING, livePoints]);
+              if (labelMarker) labelMarker.setLatLng(centroid(livePoints));
+            });
+            handle.on("dragend", (e) => {
+              const ll = (e.target as L.Marker).getLatLng();
+              dragging = false;
+              moveSelectedVertex(idx, ll.lat, ll.lng);
+            });
+            handle.on("click", (e) => L.DomEvent.stopPropagation(e));
+            handle.on("contextmenu", (e) => {
+              L.DomEvent.stopPropagation(e);
+              if (e.originalEvent) e.originalEvent.preventDefault();
+              if (canRemove) removeVertex(idx);
+            });
+            handlesGroup.addLayer(handle);
+          });
+
+          // Midpoint handles between consecutive vertices (and last→first).
+          // Click inserts a new vertex at that position.
+          for (let i = 0; i < z.points.length; i++) {
+            const a = z.points[i];
+            const b = z.points[(i + 1) % z.points.length];
+            const mid: [number, number] = [
+              (a[0] + b[0]) / 2,
+              (a[1] + b[1]) / 2,
+            ];
+            const midHandle = L.marker(mid, {
+              icon: buildMidpointIcon(),
+              keyboard: false,
+              interactive: true,
+            });
+            midHandle.on("click", (e) => {
+              L.DomEvent.stopPropagation(e);
+              insertVertexAfter(i, mid[0], mid[1]);
+            });
+            handlesGroup.addLayer(midHandle);
+          }
+        }
+      }
+    }
+
+    function renderDraft(): void {
+      const state = getState();
+      draftGroup.clearLayers();
+      if (state.mode !== "placing") return;
+      const pts = state.draftPoints;
+      if (pts.length === 0) return;
+
+      // Polyline of placed points. With >=3 points, render as a closed
+      // polygon preview; otherwise just the line segments.
+      if (pts.length >= 3) {
+        draftGroup.addLayer(
+          L.polygon(pts as [number, number][], {
+            className: `c-zone is-color-${state.draft.color}`,
+            color: `var(--color-${state.draft.color})`,
+            weight: 2,
+            opacity: 0.9,
+            fillColor: `var(--color-${state.draft.color})`,
+            fillOpacity: state.draft.isPlayArea ? 0 : 0.18,
+            dashArray: "4 4",
+            interactive: false,
+          }),
+        );
+      } else if (pts.length >= 2) {
+        draftGroup.addLayer(
+          L.polyline(pts as [number, number][], {
+            color: `var(--color-${state.draft.color})`,
+            weight: 2,
+            opacity: 0.9,
+            dashArray: "4 4",
+            interactive: false,
+          }),
+        );
+      }
+
+      // Small dots at each placed vertex.
+      for (const p of pts) {
+        draftGroup.addLayer(
+          L.marker(p, { icon: buildDraftVertexIcon(), interactive: false }),
+        );
+      }
+    }
+
+    function syncAll(): void {
+      renderZones();
+      renderDraft();
+    }
+
+    syncAll();
+    subscribe(syncAll);
+  });
+</script>

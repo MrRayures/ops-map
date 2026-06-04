@@ -1,7 +1,10 @@
 ---
 import MapPin from "@lucide/astro/icons/map-pin";
-import Wrench from "@lucide/astro/icons/wrench";
+import Pentagon from "@lucide/astro/icons/pentagon";
+import Type from "@lucide/astro/icons/type";
+import Search from "@lucide/astro/icons/search";
 import Settings from "@lucide/astro/icons/settings";
+import Printer from "@lucide/astro/icons/printer";
 import Save from "@lucide/astro/icons/save";
 import Download from "@lucide/astro/icons/download";
 import Upload from "@lucide/astro/icons/upload";
@@ -10,10 +13,18 @@ import ChevronLeft from "@lucide/astro/icons/chevron-left";
 import { panels, tabId, panelId, type PanelId } from "../data/panels";
 
 const panelIcons = {
-  address: MapPin,
-  tools: Wrench,
+  markers: MapPin,
+  zones: Pentagon,
+  texts: Type,
+  search: Search,
   settings: Settings,
+  print: Printer,
 } as const satisfies Record<PanelId, unknown>;
+
+const groupLabels = {
+  tools: "Outils",
+  settings: "Réglages",
+} as const;
 
 const actionItems = [
   { id: "save", label: "Sauvegarder", Icon: Save },
@@ -21,57 +32,76 @@ const actionItems = [
   { id: "import", label: "Importer", Icon: Upload },
 ] as const;
 
-const defaultPanel: PanelId = panels[0].id;
-
 const navButton =
-  "group relative grid size-11 place-items-center rounded-sm text-fg-secondary transition-colors hover:bg-surface-elevated hover:text-fg-primary aria-selected:bg-surface-elevated aria-selected:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+  "group/btn relative flex h-11 items-center gap-3 rounded-sm px-2.5 text-fg-secondary transition-colors hover:bg-surface-elevated hover:text-fg-primary aria-selected:bg-surface-elevated aria-selected:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+
+const navLabel =
+  "min-w-0 truncate text-sm group-data-[collapsed=true]/aside:hidden";
+
+const groupLabelClass =
+  "px-2.5 pt-2 pb-1 font-mono text-[0.625rem] tracking-wider text-fg-muted uppercase group-data-[collapsed=true]/aside:hidden";
 
 const tooltip =
-  "pointer-events-none absolute left-full top-1/2 z-10 ml-3 -translate-y-1/2 whitespace-nowrap rounded-sm bg-surface-elevated px-2 py-1 font-mono text-xs tracking-wider text-fg-primary uppercase shadow-lg opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100";
+  "pointer-events-none absolute left-full top-1/2 z-10 ml-3 -translate-y-1/2 whitespace-nowrap rounded-sm bg-surface-elevated px-2 py-1 font-mono text-xs tracking-wider text-fg-primary uppercase shadow-lg opacity-0 transition-opacity group-data-[collapsed=true]/aside:group-hover/btn:opacity-100 group-data-[collapsed=true]/aside:group-focus-visible/btn:opacity-100";
 
 const iconSize = 20;
 ---
 
 <aside
-  class="flex h-full w-16 shrink-0 flex-col items-center gap-2 border-r border-line-default bg-surface-base py-3 text-fg-primary"
+  id="sidebar"
+  data-collapsed="false"
+  class="group/aside flex h-full w-52 shrink-0 flex-col gap-1 border-r border-line-default bg-surface-base py-3 text-fg-primary transition-[width] duration-200 ease-out data-[collapsed=true]:w-16 data-[collapsed=true]:items-center"
   aria-label="Panneau latéral"
 >
   <h1 class="contents">
     <a
       href="/"
-      class="group relative grid size-10 place-items-center rounded-sm bg-accent font-mono font-bold text-accent-on uppercase outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      class="group/btn relative flex h-10 items-center gap-3 rounded-sm px-2.5 font-mono font-bold uppercase outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       aria-label="ops-map — accueil"
     >
-      O
+      <span class="grid size-10 shrink-0 place-items-center rounded-sm bg-accent text-accent-on">OPS</span>
+      <span class="text-sm tracking-wider group-data-[collapsed=true]/aside:hidden">ops-map</span>
       <span aria-hidden="true" class={tooltip}>ops-map</span>
     </a>
   </h1>
 
-  <div class="my-1 h-px w-8 bg-line-default" aria-hidden="true"></div>
+  <div class="my-1 h-px w-8 self-center bg-line-default" aria-hidden="true"></div>
 
-  <nav aria-label="Navigation">
+  <nav aria-label="Navigation" class="flex flex-col">
     <ul role="tablist" aria-orientation="vertical" class="flex flex-col gap-1">
       {
-        panels.map((item) => {
+        panels.map((item, index) => {
           const Icon = panelIcons[item.id];
+          const prev = panels[index - 1];
+          const showGroupLabel = !prev || prev.group !== item.group;
           return (
-            <li role="presentation">
-              <button
-                type="button"
-                id={tabId(item.id)}
-                role="tab"
-                aria-selected={item.id === defaultPanel ? "true" : "false"}
-                aria-controls={panelId(item.id)}
-                tabindex={item.id === defaultPanel ? 0 : -1}
-                class={navButton}
-              >
-                <span class="sr-only">{item.label}</span>
-                <span aria-hidden="true" class={tooltip}>
-                  {item.label}
-                </span>
-                <Icon size={iconSize} aria-hidden="true" />
-              </button>
-            </li>
+            <>
+              {showGroupLabel && (
+                <li role="presentation" class={groupLabelClass}>
+                  {groupLabels[item.group]}
+                </li>
+              )}
+              <li role="presentation">
+                <button
+                  type="button"
+                  id={tabId(item.id)}
+                  role="tab"
+                  aria-selected="false"
+                  aria-label={item.label}
+                  aria-controls={panelId(item.id)}
+                  tabindex={index === 0 ? 0 : -1}
+                  class={navButton}
+                >
+                  <span class="grid size-5 shrink-0 place-items-center">
+                    <Icon size={iconSize} aria-hidden="true" />
+                  </span>
+                  <span class={navLabel}>{item.label}</span>
+                  <span aria-hidden="true" class={tooltip}>
+                    {item.label}
+                  </span>
+                </button>
+              </li>
+            </>
           );
         })
       }
@@ -79,25 +109,28 @@ const iconSize = 20;
   </nav>
 
   <div
-    class="mt-auto flex flex-col gap-1 border-t border-line-default pt-3"
+    class="mt-auto flex flex-col gap-1 self-stretch border-t border-line-default px-2 pt-3"
     role="group"
     aria-label="Persistance"
   >
+    <span class={groupLabelClass}>Sauvegarde</span>
     {
       actionItems.map(({ id, label, Icon }) => (
-        <button type="button" data-action={id} class={navButton}>
-          <span class="sr-only">{label}</span>
+        <button type="button" data-action={id} aria-label={label} class={navButton}>
+          <span class="grid size-5 shrink-0 place-items-center">
+            <Icon size={iconSize} aria-hidden="true" />
+          </span>
+          <span class={navLabel}>{label}</span>
           <span aria-hidden="true" class={tooltip}>
             {label}
           </span>
-          <Icon size={iconSize} aria-hidden="true" />
         </button>
       ))
     }
   </div>
 
   <div
-    class="flex flex-col gap-1 border-t border-line-default pt-3"
+    class="flex flex-col gap-1 self-stretch border-t border-line-default px-2 pt-3"
     role="group"
     aria-label="Affichage"
   >
@@ -105,81 +138,144 @@ const iconSize = 20;
       type="button"
       id="panel-toggle"
       aria-expanded="true"
-      aria-controls="panel-group"
-      aria-label="Réduire le panneau"
+      aria-controls="sidebar"
+      aria-label="Réduire la barre"
       class={navButton}
     >
-      <span class="sr-only" data-toggle-label>Réduire le panneau</span>
-      <span aria-hidden="true" class={tooltip} data-toggle-tooltip>Réduire le panneau</span>
-      <ChevronLeft
-        size={iconSize}
-        aria-hidden="true"
-        class="transition-transform duration-200 group-aria-[expanded=false]:rotate-180"
-      />
+      <span class="grid size-5 shrink-0 place-items-center">
+        <ChevronLeft
+          size={iconSize}
+          aria-hidden="true"
+          class="transition-transform duration-200 group-data-[collapsed=true]/aside:rotate-180"
+        />
+      </span>
+      <span class={navLabel} data-toggle-label>Réduire la barre</span>
+      <span aria-hidden="true" class={tooltip} data-toggle-tooltip>Réduire la barre</span>
     </button>
   </div>
 </aside>
 
 <script>
-  const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
-  const panels = Array.from(document.querySelectorAll<HTMLElement>('[role="tabpanel"]'));
+  const sidebar = document.getElementById("sidebar");
+  const tabs = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('[role="tab"]'),
+  );
+  const panelGroup = document.getElementById("panel-group");
+  const panels = Array.from(
+    document.querySelectorAll<HTMLElement>('[role="tabpanel"]'),
+  );
 
-  function activate(target: HTMLButtonElement) {
+  // --- Panel open/close (manual activation + toggle) ---
+  function closePanel(): void {
+    for (const tab of tabs) tab.setAttribute("aria-selected", "false");
+    for (const panel of panels) panel.hidden = true;
+    if (panelGroup) {
+      panelGroup.dataset.state = "closed";
+      panelGroup.setAttribute("inert", "");
+    }
+  }
+
+  function openPanel(target: HTMLButtonElement): void {
     for (const tab of tabs) {
-      const isActive = tab === target;
-      tab.setAttribute("aria-selected", String(isActive));
-      tab.tabIndex = isActive ? 0 : -1;
+      tab.setAttribute("aria-selected", String(tab === target));
     }
     const controlsId = target.getAttribute("aria-controls");
     for (const panel of panels) {
       panel.hidden = panel.id !== controlsId;
     }
+    if (panelGroup) {
+      panelGroup.dataset.state = "open";
+      panelGroup.removeAttribute("inert");
+    }
+  }
+
+  function togglePanel(target: HTMLButtonElement): void {
+    const isActive = target.getAttribute("aria-selected") === "true";
+    if (isActive) closePanel();
+    else openPanel(target);
+  }
+
+  function focusTab(tab: HTMLButtonElement): void {
+    for (const t of tabs) t.tabIndex = t === tab ? 0 : -1;
+    tab.focus();
   }
 
   for (const tab of tabs) {
-    tab.addEventListener("click", () => activate(tab));
+    tab.addEventListener("click", () => {
+      focusTab(tab);
+      togglePanel(tab);
+    });
     tab.addEventListener("keydown", (event) => {
-      const keys = ["ArrowUp", "ArrowDown", "Home", "End"];
-      if (!keys.includes(event.key)) return;
-      event.preventDefault();
-      const idx = tabs.indexOf(tab);
-      let next: HTMLButtonElement;
-      switch (event.key) {
-        case "ArrowUp":
-          next = tabs[idx - 1] ?? tabs[tabs.length - 1];
-          break;
-        case "ArrowDown":
-          next = tabs[idx + 1] ?? tabs[0];
-          break;
-        case "Home":
-          next = tabs[0];
-          break;
-        default:
-          next = tabs[tabs.length - 1];
+      const moveKeys = ["ArrowUp", "ArrowDown", "Home", "End"];
+      if (moveKeys.includes(event.key)) {
+        // Manual activation: arrows move focus only, do not open panels.
+        event.preventDefault();
+        const idx = tabs.indexOf(tab);
+        let next: HTMLButtonElement;
+        switch (event.key) {
+          case "ArrowUp":
+            next = tabs[idx - 1] ?? tabs[tabs.length - 1];
+            break;
+          case "ArrowDown":
+            next = tabs[idx + 1] ?? tabs[0];
+            break;
+          case "Home":
+            next = tabs[0];
+            break;
+          default:
+            next = tabs[tabs.length - 1];
+        }
+        focusTab(next);
+      } else if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        togglePanel(tab);
       }
-      next.focus();
-      activate(next);
     });
   }
 
+  // --- External requests to open a panel (e.g. selecting an item on the map) ---
+  document.addEventListener("ops-map:open-panel", (event) => {
+    const panelId = (event as CustomEvent<{ panel: string }>).detail?.panel;
+    if (!panelId) return;
+    const tab = tabs.find((t) => t.getAttribute("aria-controls") === panelId);
+    if (!tab || tab.getAttribute("aria-selected") === "true") return;
+    // Keep the roving tabindex in sync without stealing focus from the map.
+    for (const t of tabs) t.tabIndex = t === tab ? 0 : -1;
+    openPanel(tab);
+  });
+
+  // --- Escape closes the active panel (focus in sidebar or panel) ---
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    if (!panelGroup || panelGroup.dataset.state !== "open") return;
+    const active = document.activeElement;
+    const inScope =
+      (sidebar && active instanceof Node && sidebar.contains(active)) ||
+      (active instanceof Node && panelGroup.contains(active));
+    if (!inScope) return;
+    const previouslyActive = tabs.find(
+      (t) => t.getAttribute("aria-selected") === "true",
+    );
+    closePanel();
+    (previouslyActive ?? tabs[0])?.focus();
+  });
+
+  // --- #panel-toggle collapses/expands the RAIL (labels <-> icons) ---
   const toggle = document.getElementById("panel-toggle");
-  const panel = document.getElementById("panel-group");
-  if (toggle && panel) {
-    const labelOpen = "Réduire le panneau";
-    const labelClosed = "Afficher le panneau";
+  if (sidebar && toggle) {
+    const labelExpanded = "Réduire la barre";
+    const labelCollapsed = "Développer la barre";
     const srLabel = toggle.querySelector<HTMLElement>("[data-toggle-label]");
     const tip = toggle.querySelector<HTMLElement>("[data-toggle-tooltip]");
 
     toggle.addEventListener("click", () => {
-      const isOpen = panel.dataset.state === "open";
-      panel.dataset.state = isOpen ? "closed" : "open";
-      toggle.setAttribute("aria-expanded", String(!isOpen));
-      const nextLabel = isOpen ? labelClosed : labelOpen;
+      const isCollapsed = sidebar.dataset.collapsed === "true";
+      sidebar.dataset.collapsed = isCollapsed ? "false" : "true";
+      toggle.setAttribute("aria-expanded", String(isCollapsed));
+      const nextLabel = isCollapsed ? labelExpanded : labelCollapsed;
       toggle.setAttribute("aria-label", nextLabel);
       if (srLabel) srLabel.textContent = nextLabel;
       if (tip) tip.textContent = nextLabel;
-      if (isOpen) panel.setAttribute("inert", "");
-      else panel.removeAttribute("inert");
     });
   }
 </script>

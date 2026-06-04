@@ -1,0 +1,56 @@
+/* Text-tool label: free-form label placed on the map with a colored
+   background. Reuses the chrome of marker/zone labels but exposes the
+   background color (per MARKER_COLORS) as the customizable surface. */
+.c-text-label {
+  display: inline-block;
+  width: max-content;
+  font-family: var(--font-mono);
+  color: var(--color-fg-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.5rem;
+  white-space: nowrap;
+  border: 1px solid var(--color-surface-base);
+  pointer-events: auto;
+  cursor: pointer;
+  user-select: none;
+  transform: translate(-50%, -50%);
+}
+
+.c-text-label.is-color-team-red {
+  background: var(--color-team-red);
+}
+.c-text-label.is-color-team-blue {
+  background: var(--color-team-blue);
+}
+.c-text-label.is-color-team-green {
+  background: var(--color-team-green);
+}
+.c-text-label.is-color-team-purple {
+  background: var(--color-team-purple);
+}
+.c-text-label.is-color-marker-objective {
+  background: var(--color-marker-objective);
+}
+.c-text-label.is-color-marker-spawn {
+  background: var(--color-marker-spawn);
+}
+.c-text-label.is-color-marker-danger {
+  background: var(--color-marker-danger);
+}
+.c-text-label.is-color-marker-cover {
+  background: var(--color-marker-cover);
+}
+
+.c-text-label.is-selected {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.c-text-label.is-empty::before {
+  content: attr(data-placeholder);
+  opacity: 0.6;
+  font-style: italic;
+}

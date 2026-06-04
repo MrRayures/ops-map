@@ -1,4 +1,5 @@
 ---
+import MapPinPlus from "@lucide/astro/icons/map-pin-plus";
 import Button from "./ui/Button.astro";
 import {
   MARKER_SHAPES,
@@ -42,7 +43,8 @@ const colorLabels: Record<MarkerColor, string> = {
 <div data-marker-editor>
   <div data-marker-editor-idle>
     <Button variant="primary" size="md" class="w-full" data-action="start-placing">
-      + Ajouter un marqueur
+      Ajouter un marqueur
+      <MapPinPlus size={24} aria-hidden="true" />
     </Button>
   </div>
 

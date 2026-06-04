@@ -1,0 +1,180 @@
+/* Print preview overlay — interactive on-screen preview + @media print rules. */
+
+/* Hidden by default; shown only when body[data-print-preview="true"]. */
+.c-print {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: none;
+  flex-direction: column;
+  pointer-events: none; /* let map drag/zoom through; children re-enable as needed */
+  font-family: var(--font-mono);
+}
+
+/* Shown only while previewing. */
+body[data-print-preview='true'] .c-print {
+  display: flex;
+}
+
+/* While previewing on screen, hide the app chrome (sidebar, panel, map UI). */
+body[data-print-preview='true'] :where(#sidebar, #panel-group, .c-map__ui) {
+  display: none;
+}
+
+/* Header band: OP left, terrain right. */
+.c-print-band {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--color-accent);
+  color: var(--color-accent-on);
+  font-weight: 700;
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  pointer-events: auto;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+.c-print-stage {
+  position: relative;
+  flex: 1;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Paper-ratio frame with a dark mask around it. */
+.c-print-frame {
+  position: relative;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
+  border: 2px solid var(--color-accent);
+}
+.c-print-frame[data-orientation='landscape'] {
+  aspect-ratio: 1.414 / 1;
+  /* 6rem reserves vertical room for the header band + action bar. */
+  width: min(92%, calc((100vh - 6rem) * 1.414));
+}
+.c-print-frame[data-orientation='portrait'] {
+  aspect-ratio: 1 / 1.414;
+  height: min(92%, calc(100vw * 1.414));
+  width: auto;
+}
+
+.c-print-frame-tag {
+  position: absolute;
+  top: 0.25rem;
+  left: 0.5rem;
+  color: var(--color-accent);
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Compass rose — top-right inside the frame. */
+.c-print-compass {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  color: #ffffff;
+}
+
+/* Legend box — bottom-right inside the frame. */
+.c-print-legend {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.5rem;
+  min-width: 7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem 0.625rem;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid var(--color-line-default);
+  color: #ffffff;
+  font-size: 0.625rem;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+.c-print-legend-title {
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.c-print-legend-empty {
+  opacity: 0.6;
+}
+
+/* Action bar — bottom center, screen only. */
+.c-print-actions {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.5rem;
+  pointer-events: auto;
+}
+.c-print-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 2.5rem;
+  padding-inline: 1rem;
+  border: 1px solid var(--color-line-default);
+  background: var(--color-surface-card);
+  color: var(--color-fg-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-surface-elevated);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
+.c-print-btn[data-variant='primary'] {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-on);
+
+  &:hover {
+    background: var(--color-accent-hover);
+  }
+}
+
+/* --- Print output --- */
+@media print {
+  /* Hide app chrome; print only the map + overlay. */
+  /* Intentional !important: print reset must override component/utility display rules. */
+  #sidebar,
+  #panel-group,
+  .c-map__ui,
+  #toast,
+  .c-print-actions {
+    display: none !important;
+  }
+
+  /* The overlay frame mask must not print as a grey block. */
+  .c-print {
+    position: static;
+    pointer-events: none;
+  }
+  .c-print-frame {
+    box-shadow: none;
+  }
+}
+
+/* size is fixed: @page cannot read CSS custom properties, so the in-app orientation radio does not auto-switch the printed page. The on-screen frame ratio communicates intent; the print dialog sets final orientation. */
+@page {
+  size: A4 landscape;
+  margin: 10mm;
+}

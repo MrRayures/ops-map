@@ -8,9 +8,81 @@
   }
 }
 
+/* Tactical grid line — subtle, non-interactive. */
+.c-grid-line {
+  pointer-events: none;
+}
+
+/* Cursor tooltip showing the hovered cell coord (e.g. "C4"). */
+.c-cursor-coord {
+  position: absolute;
+  z-index: 1000;
+  pointer-events: none;
+  display: none;
+  background: rgba(0, 0, 0, 0.85);
+  color: #ffffff;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.45rem;
+  border: 1px solid var(--color-line-default);
+  white-space: nowrap;
+}
+.c-cursor-coord.is-visible {
+  display: block;
+}
+
+/* Coordinate labels around the play area (A,B,C / 1,2,3). */
+.c-grid-coord {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow:
+    0 0 3px rgba(0, 0, 0, 0.85),
+    0 1px 2px rgba(0, 0, 0, 0.6);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+}
+
+/* Custom grid-aware scale control. The bar's width is computed in JS
+   so it matches the active grid step (auto or manual). */
+.c-grid-scale {
+  margin: 0 0 calc(var(--mapWrapperPadding) + 8px) calc(var(--mapWrapperPadding) + 8px) !important;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.125rem;
+  pointer-events: none;
+}
+.c-grid-scale-bar {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.85);
+  border-top: none;
+  min-width: 2px;
+}
+.c-grid-scale-label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 0.125rem 0.5rem;
+  border: 1px solid var(--color-line-default);
+  white-space: nowrap;
+}
+
 .c-map__wrapper {
   &::before {
-    content: "";
+    content: '';
     position: absolute;
     inset: 0;
     z-index: 999;
@@ -28,4 +100,13 @@
   left: var(--mapWrapperPadding);
   right: var(--mapWrapperPadding);
   bottom: var(--mapWrapperPadding);
+}
+
+.c-map__zoom-controls {
+  position: absolute;
+  bottom: 0.75rem;
+  right: 0.75rem;
+  display: flex;
+  gap: 0.375rem;
+  pointer-events: auto;
 }

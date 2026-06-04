@@ -8,9 +8,11 @@
 
 @import './components/corner-brackets.css';
 @import './components/grid-overlay.css';
-@import './components/header.css';
+@import './components/print.css';
 @import './components/map.css';
 @import './components/pin.css';
 @import './components/marker.css';
+@import './components/zone.css';
+@import './components/text.css';
 @import './components/toast.css';
 @import './components/title.css';

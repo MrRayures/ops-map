@@ -1,10 +1,6 @@
-import {
-  DEFAULT_MARKER_DRAFT,
-  type Marker,
-  type MarkerDraft,
-} from "../data/markers";
+import { DEFAULT_MARKER_DRAFT, type Marker, type MarkerDraft } from '../data/markers';
 
-export type MarkerMode = "idle" | "placing";
+export type MarkerMode = 'idle' | 'placing';
 
 export interface MarkersState {
   readonly markers: readonly Marker[];
@@ -20,7 +16,7 @@ const listeners = new Set<Listener>();
 let state: MarkersState = {
   markers: [],
   selectedId: null,
-  mode: "idle",
+  mode: 'idle',
   draft: { ...DEFAULT_MARKER_DRAFT },
 };
 
@@ -44,6 +40,15 @@ export function subscribe(listener: Listener): () => void {
   };
 }
 
+export function hydrate(markers: readonly Marker[]): void {
+  setState({
+    markers: [...markers],
+    selectedId: null,
+    mode: 'idle',
+    draft: { ...DEFAULT_MARKER_DRAFT },
+  });
+}
+
 export function setMode(mode: MarkerMode): void {
   if (state.mode === mode) return;
   setState({ mode });
@@ -53,20 +58,16 @@ export function updateDraft(patch: Partial<MarkerDraft>): void {
   setState({ draft: { ...state.draft, ...patch } });
 }
 
-export function createMarker(
-  lat: number,
-  lng: number,
-  draft: MarkerDraft,
-): Marker {
+export function createMarker(lat: number, lng: number, draft: MarkerDraft): Marker {
   const id =
-    typeof crypto !== "undefined" && "randomUUID" in crypto
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto
       ? crypto.randomUUID()
       : `m-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
   const marker: Marker = { id, lat, lng, ...draft };
   setState({
     markers: [...state.markers, marker],
     selectedId: id,
-    mode: "idle",
+    mode: 'idle',
   });
   return marker;
 }
@@ -79,18 +80,14 @@ export function selectMarker(id: string | null): void {
 export function updateSelected(patch: Partial<MarkerDraft>): void {
   if (state.selectedId === null) return;
   setState({
-    markers: state.markers.map((m) =>
-      m.id === state.selectedId ? { ...m, ...patch } : m,
-    ),
+    markers: state.markers.map((m) => (m.id === state.selectedId ? { ...m, ...patch } : m)),
   });
 }
 
 export function moveSelected(lat: number, lng: number): void {
   if (state.selectedId === null) return;
   setState({
-    markers: state.markers.map((m) =>
-      m.id === state.selectedId ? { ...m, lat, lng } : m,
-    ),
+    markers: state.markers.map((m) => (m.id === state.selectedId ? { ...m, lat, lng } : m)),
   });
 }
 

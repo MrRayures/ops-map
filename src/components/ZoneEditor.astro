@@ -1,0 +1,257 @@
+---
+import VectorSquare from "@lucide/astro/icons/vector-square";
+import Button from "./ui/Button.astro";
+import { MARKER_COLORS, type MarkerColor } from "../data/markers";
+
+const colorClass: Record<MarkerColor, string> = {
+  "team-red": "bg-team-red",
+  "team-blue": "bg-team-blue",
+  "team-green": "bg-team-green",
+  "team-purple": "bg-team-purple",
+  "marker-objective": "bg-marker-objective",
+  "marker-spawn": "bg-marker-spawn",
+  "marker-danger": "bg-marker-danger",
+  "marker-cover": "bg-marker-cover",
+};
+
+const colorLabels: Record<MarkerColor, string> = {
+  "team-red": "Équipe rouge",
+  "team-blue": "Équipe bleue",
+  "team-green": "Équipe verte",
+  "team-purple": "Équipe violette",
+  "marker-objective": "Objectif",
+  "marker-spawn": "Spawn",
+  "marker-danger": "Danger",
+  "marker-cover": "Couverture",
+};
+---
+
+<div data-zone-editor>
+  <div data-zone-editor-idle>
+    <Button variant="primary" size="md" class="w-full" data-action="zone-start-placing">
+      Ajouter une zone
+      <VectorSquare size={20} aria-hidden="true" />
+    </Button>
+  </div>
+
+  <div data-zone-editor-form hidden class="flex flex-col gap-5">
+    <div class="flex items-center justify-between">
+      <span data-zone-form-status aria-live="polite" class="font-mono text-xs tracking-wider text-fg-secondary uppercase"></span>
+      <Button variant="ghost" size="sm" data-action="zone-cancel-or-deselect" aria-label="Fermer">
+        ✕
+      </Button>
+    </div>
+
+    <p data-zone-placing-hint hidden class="text-xs text-fg-secondary">
+      Clic = ajouter un sommet · Double-clic ou Entrée = valider · Échap = annuler
+    </p>
+
+    <p data-zone-edit-hint hidden class="text-xs text-fg-secondary">
+      Glisser un sommet pour le déplacer · Clic sur un point intermédiaire pour ajouter un sommet · Clic droit sur un sommet pour le supprimer
+    </p>
+
+    <fieldset class="flex flex-col gap-2">
+      <legend class="font-mono text-xs font-semibold tracking-wider text-fg-secondary uppercase">
+        Couleur
+      </legend>
+      <div class="grid grid-cols-4 gap-2" role="radiogroup" aria-label="Couleur de la zone">
+        {
+          MARKER_COLORS.map((color) => (
+            <button
+              type="button"
+              role="radio"
+              aria-checked="false"
+              data-zone-field="color"
+              data-value={color}
+              aria-label={colorLabels[color]}
+              class:list={[
+                "h-10 rounded-sm border border-line-default transition-colors aria-checked:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+                colorClass[color],
+              ]}
+            />
+          ))
+        }
+      </div>
+    </fieldset>
+
+    <div class="flex flex-col gap-2">
+      <label
+        for="zone-label"
+        class="font-mono text-xs font-semibold tracking-wider text-fg-secondary uppercase"
+      >
+        Label (optionnel)
+      </label>
+      <input
+        id="zone-label"
+        type="text"
+        data-zone-field="label"
+        maxlength="40"
+        class="w-full rounded-sm border border-line-default bg-surface-base px-3 py-2 text-sm text-fg-primary placeholder:text-fg-muted focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        placeholder="ALPHA"
+      />
+    </div>
+
+    <label class="flex cursor-pointer items-start gap-3 rounded-sm border border-line-default px-3 py-2 has-[:checked]:border-accent has-[:checked]:bg-surface-elevated has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent">
+      <input
+        type="checkbox"
+        data-zone-field="play-area"
+        class="mt-0.5 size-4 accent-[var(--color-accent)]"
+      />
+      <span class="flex flex-col gap-1">
+        <span class="text-sm text-fg-primary">Zone de jeu</span>
+        <span class="text-xs text-fg-secondary">Délimite le terrain jouable. Une seule zone de jeu par opération.</span>
+      </span>
+    </label>
+
+    <Button variant="primary" size="md" class="w-full" data-action="zone-finish">
+      Valider
+    </Button>
+
+    <div data-zone-delete-wrap hidden class="border-t border-line-subtle pt-4">
+      <Button variant="ghost" size="sm" class="w-full text-danger hover:bg-surface-elevated" data-action="zone-delete">
+        Supprimer cette zone
+      </Button>
+    </div>
+  </div>
+</div>
+
+<script>
+  import type { MarkerColor } from "../data/markers";
+  import {
+    deleteSelected,
+    finishDraft,
+    getState,
+    selectZone,
+    setMode,
+    subscribe,
+    updateDraft,
+    updateSelected,
+  } from "../lib/zones-store";
+
+  const root = document.querySelector<HTMLElement>("[data-zone-editor]");
+  if (root) {
+    const idle = root.querySelector<HTMLElement>("[data-zone-editor-idle]")!;
+    const form = root.querySelector<HTMLElement>("[data-zone-editor-form]")!;
+    const statusEl = root.querySelector<HTMLElement>("[data-zone-form-status]")!;
+    const placingHint = root.querySelector<HTMLElement>("[data-zone-placing-hint]")!;
+    const editHint = root.querySelector<HTMLElement>("[data-zone-edit-hint]")!;
+    const startBtn = root.querySelector<HTMLButtonElement>(
+      'button[data-action="zone-start-placing"]',
+    )!;
+    const cancelBtn = root.querySelector<HTMLButtonElement>(
+      'button[data-action="zone-cancel-or-deselect"]',
+    )!;
+    const finishBtn = root.querySelector<HTMLButtonElement>(
+      'button[data-action="zone-finish"]',
+    )!;
+    const labelInput = root.querySelector<HTMLInputElement>(
+      'input[data-zone-field="label"]',
+    )!;
+    const colorBtns = root.querySelectorAll<HTMLButtonElement>(
+      'button[data-zone-field="color"]',
+    );
+    const playAreaCheckbox = root.querySelector<HTMLInputElement>(
+      'input[data-zone-field="play-area"]',
+    )!;
+    const deleteWrap = root.querySelector<HTMLElement>("[data-zone-delete-wrap]")!;
+    const deleteBtn = root.querySelector<HTMLButtonElement>(
+      'button[data-action="zone-delete"]',
+    )!;
+
+    startBtn.addEventListener("click", () => setMode("placing"));
+
+    function closeEditor(): void {
+      const { mode, selectedId, draftPoints } = getState();
+      if (mode === "placing") {
+        // If user has placed >= 3 points and clicks "Valider", finalize.
+        if (draftPoints.length >= 3) {
+          finishDraft();
+        } else {
+          setMode("idle");
+        }
+      } else if (selectedId) {
+        selectZone(null);
+      }
+    }
+
+    cancelBtn.addEventListener("click", () => {
+      const { mode } = getState();
+      if (mode === "placing") setMode("idle");
+      else selectZone(null);
+    });
+    finishBtn.addEventListener("click", closeEditor);
+
+    for (const btn of colorBtns) {
+      btn.addEventListener("click", () => {
+        const value = btn.dataset.value as MarkerColor;
+        const { selectedId } = getState();
+        if (selectedId) updateSelected({ color: value });
+        else updateDraft({ color: value });
+      });
+    }
+
+    labelInput.addEventListener("input", () => {
+      const { selectedId } = getState();
+      if (selectedId) updateSelected({ label: labelInput.value });
+      else updateDraft({ label: labelInput.value });
+    });
+
+    playAreaCheckbox.addEventListener("change", () => {
+      const isPlayArea = playAreaCheckbox.checked;
+      const { selectedId } = getState();
+      if (selectedId) updateSelected({ isPlayArea });
+      else updateDraft({ isPlayArea });
+    });
+
+    deleteBtn.addEventListener("click", () => {
+      deleteSelected();
+    });
+
+    function render(): void {
+      const state = getState();
+      const showIdle = state.mode === "idle" && state.selectedId === null;
+      idle.hidden = !showIdle;
+      form.hidden = showIdle;
+      deleteWrap.hidden = !state.selectedId;
+      placingHint.hidden = state.mode !== "placing";
+      editHint.hidden = state.selectedId === null;
+
+      if (showIdle) return;
+
+      const source = state.selectedId
+        ? state.zones.find((z) => z.id === state.selectedId)
+        : null;
+      const data = source ?? state.draft;
+
+      statusEl.textContent =
+        state.mode === "placing"
+          ? `Placement (${state.draftPoints.length} sommet${state.draftPoints.length > 1 ? "s" : ""})`
+          : "Zone sélectionnée";
+
+      cancelBtn.setAttribute(
+        "aria-label",
+        state.mode === "placing" ? "Annuler le placement" : "Désélectionner",
+      );
+
+      // Disable Valider if drafting and < 3 points
+      finishBtn.disabled =
+        state.mode === "placing" && state.draftPoints.length < 3;
+
+      for (const btn of colorBtns) {
+        btn.setAttribute("aria-checked", String(btn.dataset.value === data.color));
+      }
+
+      const labelValue = data.label ?? "";
+      if (labelInput.value !== labelValue) {
+        labelInput.value = labelValue;
+      }
+
+      if (playAreaCheckbox.checked !== data.isPlayArea) {
+        playAreaCheckbox.checked = data.isPlayArea;
+      }
+    }
+
+    render();
+    subscribe(render);
+  }
+</script>

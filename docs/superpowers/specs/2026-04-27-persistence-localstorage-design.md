@@ -58,7 +58,7 @@ Exemple :
 Module unique, sans dépendance au DOM ou à Leaflet. Il connaît uniquement la forme du blob et l'API `localStorage`.
 
 ```ts
-const STORAGE_KEY = "ops-map:state";
+const STORAGE_KEY = 'ops-map:state';
 const SCHEMA_VERSION = 1;
 
 export interface PersistedState {
@@ -212,11 +212,11 @@ if (window.__opsMapBoot) {
   initView();
 } else {
   // sinon, attend l'event (cas où Map.astro s'exécute en premier)
-  window.addEventListener("ops-map:boot", initView, { once: true });
+  window.addEventListener('ops-map:boot', initView, { once: true });
 }
 
 // Persiste à chaque mouvement de carte (debounced via update)
-map.on("moveend", () => {
+map.on('moveend', () => {
   const c = map.getCenter();
   update({ view: { center: [c.lat, c.lng], zoom: map.getZoom() } });
 });
@@ -233,14 +233,14 @@ Si l'utilisateur clique "Sauvegarder" pendant qu'il édite le titre, on force `e
 Remplacer [Sidebar.astro:17-20](src/components/Sidebar.astro#L17-L20) :
 
 ```ts
-import Save from "@lucide/astro/icons/save";
-import Download from "@lucide/astro/icons/download";
-import Upload from "@lucide/astro/icons/upload";
+import Save from '@lucide/astro/icons/save';
+import Download from '@lucide/astro/icons/download';
+import Upload from '@lucide/astro/icons/upload';
 
 const actionItems = [
-  { id: "save", label: "Sauvegarder", Icon: Save },
-  { id: "export", label: "Exporter", Icon: Download },
-  { id: "import", label: "Importer", Icon: Upload },
+  { id: 'save', label: 'Sauvegarder', Icon: Save },
+  { id: 'export', label: 'Exporter', Icon: Download },
+  { id: 'import', label: 'Importer', Icon: Upload },
 ] as const;
 ```
 
@@ -250,44 +250,38 @@ Vit dans `index.astro` (qui a accès au titre, au map ref via `leaflet-map-ref.t
 
 ```ts
 // Sauvegarder
-document
-  .querySelector('[data-action="save"]')
-  ?.addEventListener("click", () => {
-    if (!titleInput.hidden) exitEditMode(); // force exit si en édition
-    saveNow();
-    showToast("Sauvegardé");
-  });
+document.querySelector('[data-action="save"]')?.addEventListener('click', () => {
+  if (!titleInput.hidden) exitEditMode(); // force exit si en édition
+  saveNow();
+  showToast('Sauvegardé');
+});
 
 // Exporter
-document
-  .querySelector('[data-action="export"]')
-  ?.addEventListener("click", () => {
-    exportToFile();
-  });
+document.querySelector('[data-action="export"]')?.addEventListener('click', () => {
+  exportToFile();
+});
 
 // Importer
-const fileInput = document.createElement("input");
-fileInput.type = "file";
-fileInput.accept = "application/json,.json";
+const fileInput = document.createElement('input');
+fileInput.type = 'file';
+fileInput.accept = 'application/json,.json';
 
-document
-  .querySelector('[data-action="import"]')
-  ?.addEventListener("click", () => {
-    if (!confirm("Remplacer l'opération en cours ?")) return;
-    fileInput.click();
-  });
+document.querySelector('[data-action="import"]')?.addEventListener('click', () => {
+  if (!confirm("Remplacer l'opération en cours ?")) return;
+  fileInput.click();
+});
 
-fileInput.addEventListener("change", async () => {
+fileInput.addEventListener('change', async () => {
   const file = fileInput.files?.[0];
   if (!file) return;
   try {
     const state = await importFromFile(file);
     applyState(state);
-    showToast("Importé");
+    showToast('Importé');
   } catch (err) {
-    alert(err instanceof Error ? err.message : "Fichier invalide");
+    alert(err instanceof Error ? err.message : 'Fichier invalide');
   } finally {
-    fileInput.value = ""; // permet de réimporter le même fichier
+    fileInput.value = ''; // permet de réimporter le même fichier
   }
 });
 ```
@@ -379,7 +373,7 @@ Fonction locale dans `index.astro` (pas de module dédié pour une fonction de 1
 ```ts
 let toastTimer: number | null = null;
 function showToast(message: string): void {
-  const el = document.getElementById("toast");
+  const el = document.getElementById('toast');
   if (!el) return;
   el.textContent = message;
   el.hidden = false;

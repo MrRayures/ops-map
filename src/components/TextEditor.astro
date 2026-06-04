@@ -1,0 +1,200 @@
+---
+import Type from "@lucide/astro/icons/type";
+import Button from "./ui/Button.astro";
+import { MARKER_COLORS, type MarkerColor } from "../data/markers";
+
+const colorClass: Record<MarkerColor, string> = {
+  "team-red": "bg-team-red",
+  "team-blue": "bg-team-blue",
+  "team-green": "bg-team-green",
+  "team-purple": "bg-team-purple",
+  "marker-objective": "bg-marker-objective",
+  "marker-spawn": "bg-marker-spawn",
+  "marker-danger": "bg-marker-danger",
+  "marker-cover": "bg-marker-cover",
+};
+
+const colorLabels: Record<MarkerColor, string> = {
+  "team-red": "Équipe rouge",
+  "team-blue": "Équipe bleue",
+  "team-green": "Équipe verte",
+  "team-purple": "Équipe violette",
+  "marker-objective": "Objectif",
+  "marker-spawn": "Spawn",
+  "marker-danger": "Danger",
+  "marker-cover": "Couverture",
+};
+---
+
+<div data-text-editor>
+  <div data-text-editor-idle>
+    <Button variant="primary" size="md" class="w-full" data-action="text-start-placing">
+      Ajouter un texte
+      <Type size={20} aria-hidden="true" />
+    </Button>
+  </div>
+
+  <div data-text-editor-form hidden class="flex flex-col gap-5">
+    <div class="flex items-center justify-between">
+      <span data-text-form-status aria-live="polite" class="font-mono text-xs tracking-wider text-fg-secondary uppercase"></span>
+      <Button variant="ghost" size="sm" data-action="text-cancel-or-deselect" aria-label="Fermer">
+        ✕
+      </Button>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label
+        for="text-value"
+        class="font-mono text-xs font-semibold tracking-wider text-fg-secondary uppercase"
+      >
+        Texte
+      </label>
+      <input
+        id="text-value"
+        type="text"
+        data-text-field="value"
+        maxlength="60"
+        class="w-full rounded-sm border border-line-default bg-surface-base px-3 py-2 text-sm text-fg-primary placeholder:text-fg-muted focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        placeholder="ZONE BLEUE"
+      />
+    </div>
+
+    <fieldset class="flex flex-col gap-2">
+      <legend class="font-mono text-xs font-semibold tracking-wider text-fg-secondary uppercase">
+        Couleur de fond
+      </legend>
+      <div class="grid grid-cols-4 gap-2" role="radiogroup" aria-label="Couleur de fond">
+        {
+          MARKER_COLORS.map((color) => (
+            <button
+              type="button"
+              role="radio"
+              aria-checked="false"
+              data-text-field="background-color"
+              data-value={color}
+              aria-label={colorLabels[color]}
+              class:list={[
+                "h-10 rounded-sm border border-line-default transition-colors aria-checked:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+                colorClass[color],
+              ]}
+            />
+          ))
+        }
+      </div>
+    </fieldset>
+
+    <div data-text-delete-wrap hidden class="border-t border-line-subtle pt-4">
+      <Button variant="ghost" size="sm" class="w-full text-danger hover:bg-surface-elevated" data-action="text-delete">
+        Supprimer ce texte
+      </Button>
+    </div>
+  </div>
+</div>
+
+<script>
+  import type { MarkerColor } from "../data/markers";
+  import {
+    deleteSelected,
+    getState,
+    selectText,
+    setMode,
+    subscribe,
+    updateDraft,
+    updateSelected,
+  } from "../lib/texts-store";
+
+  const root = document.querySelector<HTMLElement>("[data-text-editor]");
+  if (root) {
+    const idle = root.querySelector<HTMLElement>("[data-text-editor-idle]")!;
+    const form = root.querySelector<HTMLElement>("[data-text-editor-form]")!;
+    const statusEl = root.querySelector<HTMLElement>("[data-text-form-status]")!;
+    const startBtn = root.querySelector<HTMLButtonElement>(
+      'button[data-action="text-start-placing"]',
+    )!;
+    const cancelBtn = root.querySelector<HTMLButtonElement>(
+      'button[data-action="text-cancel-or-deselect"]',
+    )!;
+    const valueInput = root.querySelector<HTMLInputElement>(
+      'input[data-text-field="value"]',
+    )!;
+    const colorBtns = root.querySelectorAll<HTMLButtonElement>(
+      'button[data-text-field="background-color"]',
+    );
+    const deleteWrap = root.querySelector<HTMLElement>("[data-text-delete-wrap]")!;
+    const deleteBtn = root.querySelector<HTMLButtonElement>(
+      'button[data-action="text-delete"]',
+    )!;
+
+    startBtn.addEventListener("click", () => setMode("placing"));
+
+    cancelBtn.addEventListener("click", () => {
+      const { mode } = getState();
+      if (mode === "placing") setMode("idle");
+      else selectText(null);
+    });
+
+    for (const btn of colorBtns) {
+      btn.addEventListener("click", () => {
+        const value = btn.dataset.value as MarkerColor;
+        const { selectedId } = getState();
+        if (selectedId) updateSelected({ backgroundColor: value });
+        else updateDraft({ backgroundColor: value });
+      });
+    }
+
+    valueInput.addEventListener("input", () => {
+      const { selectedId } = getState();
+      if (selectedId) updateSelected({ value: valueInput.value });
+      else updateDraft({ value: valueInput.value });
+    });
+
+    deleteBtn.addEventListener("click", () => {
+      deleteSelected();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return;
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) {
+        return;
+      }
+      const { mode, selectedId } = getState();
+      if (mode === "placing") setMode("idle");
+      else if (selectedId) selectText(null);
+    });
+
+    function render(): void {
+      const state = getState();
+      const showIdle = state.mode === "idle" && state.selectedId === null;
+      idle.hidden = !showIdle;
+      form.hidden = showIdle;
+      deleteWrap.hidden = !state.selectedId;
+
+      if (showIdle) return;
+
+      const source = state.selectedId
+        ? state.texts.find((t) => t.id === state.selectedId)
+        : null;
+      const data = source ?? state.draft;
+
+      statusEl.textContent =
+        state.mode === "placing" ? "Cliquez pour placer le texte" : "Texte sélectionné";
+
+      cancelBtn.setAttribute(
+        "aria-label",
+        state.mode === "placing" ? "Annuler le placement" : "Désélectionner",
+      );
+
+      for (const btn of colorBtns) {
+        btn.setAttribute("aria-checked", String(btn.dataset.value === data.backgroundColor));
+      }
+
+      if (valueInput.value !== data.value) {
+        valueInput.value = data.value;
+      }
+    }
+
+    render();
+    subscribe(render);
+  }
+</script>

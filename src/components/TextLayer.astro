@@ -1,0 +1,100 @@
+---
+// TextLayer renders text-tool labels on the map and keeps them in sync
+// with the texts store. Pattern mirrors MarkerLayer (diff-based update,
+// draggable, click to select).
+---
+
+<script>
+  import L from "leaflet";
+  import {
+    subscribe,
+    getState,
+    selectText,
+    moveSelected,
+  } from "../lib/texts-store";
+  import { whenMapReady } from "../lib/leaflet-map-ref";
+  import type { TextItem } from "../data/texts";
+
+  function buildHtml(t: TextItem, isSelected: boolean): string {
+    const isEmpty = t.value.trim().length === 0;
+    const safe = t.value
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+    const classes = [
+      "c-text-label",
+      `is-color-${t.backgroundColor}`,
+      isSelected ? "is-selected" : "",
+      isEmpty ? "is-empty" : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+    const content = isEmpty ? "" : safe;
+    return `<div class="${classes}" data-id="${t.id}" data-placeholder="TEXTE">${content}</div>`;
+  }
+
+  function buildIcon(t: TextItem, isSelected: boolean): L.DivIcon {
+    return L.divIcon({
+      html: buildHtml(t, isSelected),
+      className: "",
+      iconAnchor: [0, 0],
+    });
+  }
+
+  whenMapReady((map) => {
+    const group = L.layerGroup().addTo(map);
+    const layerById = new Map<string, L.Marker>();
+
+    function attachHandlers(id: string, leafletMarker: L.Marker): void {
+      leafletMarker.on("click", (e) => {
+        L.DomEvent.stopPropagation(e);
+        selectText(id);
+      });
+      leafletMarker.on("dragstart", () => {
+        selectText(id);
+      });
+      leafletMarker.on("dragend", (e) => {
+        const target = e.target as L.Marker;
+        const ll = target.getLatLng();
+        moveSelected(ll.lat, ll.lng);
+      });
+    }
+
+    function sync(): void {
+      const state = getState();
+      const desiredIds = new Set(state.texts.map((t) => t.id));
+
+      // Remove texts no longer in state
+      for (const [id, lm] of layerById) {
+        if (!desiredIds.has(id)) {
+          group.removeLayer(lm);
+          layerById.delete(id);
+        }
+      }
+
+      // Add or update remaining texts
+      for (const t of state.texts) {
+        const isSelected = state.selectedId === t.id;
+        const existing = layerById.get(t.id);
+        if (!existing) {
+          const lm = L.marker([t.lat, t.lng], {
+            icon: buildIcon(t, isSelected),
+            draggable: true,
+          });
+          attachHandlers(t.id, lm);
+          group.addLayer(lm);
+          layerById.set(t.id, lm);
+        } else {
+          const ll = existing.getLatLng();
+          if (ll.lat !== t.lat || ll.lng !== t.lng) {
+            existing.setLatLng([t.lat, t.lng]);
+          }
+          existing.setIcon(buildIcon(t, isSelected));
+        }
+      }
+    }
+
+    sync();
+    subscribe(sync);
+  });
+</script>
