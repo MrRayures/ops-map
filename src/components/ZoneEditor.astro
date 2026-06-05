@@ -1,8 +1,9 @@
 ---
 import VectorSquare from "@lucide/astro/icons/vector-square";
 import Button from "./ui/Button.astro";
-import { MARKER_COLORS } from "../data/markers";
-import { MARKER_COLOR_CLASS, MARKER_COLOR_LABELS } from "../data/marker-colors";
+import FieldLabel from "./ui/FieldLabel.astro";
+import TextField from "./ui/TextField.astro";
+import ColorSwatchGroup from "./ui/ColorSwatchGroup.astro";
 ---
 
 <div data-zone-editor>
@@ -30,45 +31,17 @@ import { MARKER_COLOR_CLASS, MARKER_COLOR_LABELS } from "../data/marker-colors";
     </p>
 
     <fieldset class="flex flex-col gap-2">
-      <legend class="font-mono text-xs font-semibold tracking-wider text-fg-secondary uppercase">
-        Couleur
-      </legend>
-      <div class="grid grid-cols-4 gap-2" role="radiogroup" aria-label="Couleur de la zone">
-        {
-          MARKER_COLORS.map((color) => (
-            <button
-              type="button"
-              role="radio"
-              aria-checked="false"
-              data-zone-field="color"
-              data-value={color}
-              aria-label={MARKER_COLOR_LABELS[color]}
-              class:list={[
-                "h-10 rounded-sm border border-line-default transition-colors aria-checked:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
-                MARKER_COLOR_CLASS[color],
-              ]}
-            />
-          ))
-        }
-      </div>
+      <FieldLabel as="legend">Couleur</FieldLabel>
+      <ColorSwatchGroup fieldAttr="data-zone-field" fieldValue="color" groupLabel="Couleur de la zone" />
     </fieldset>
 
-    <div class="flex flex-col gap-2">
-      <label
-        for="zone-label"
-        class="font-mono text-xs font-semibold tracking-wider text-fg-secondary uppercase"
-      >
-        Label (optionnel)
-      </label>
-      <input
-        id="zone-label"
-        type="text"
-        data-zone-field="label"
-        maxlength="40"
-        class="w-full rounded-sm border border-line-default bg-surface-base px-3 py-2 text-sm text-fg-primary placeholder:text-fg-muted focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-        placeholder="ALPHA"
-      />
-    </div>
+    <TextField
+      id="zone-label"
+      label="Label (optionnel)"
+      placeholder="ALPHA"
+      maxlength={40}
+      data-zone-field="label"
+    />
 
     <label class="flex cursor-pointer items-start gap-3 rounded-sm border border-line-default px-3 py-2 has-[:checked]:border-accent has-[:checked]:bg-surface-elevated has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent">
       <input
