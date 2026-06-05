@@ -1,27 +1,25 @@
 ---
-import Type from "@lucide/astro/icons/type";
+import EditorShell from "./EditorShell.astro";
 import Button from "./ui/Button.astro";
 import FieldLabel from "./ui/FieldLabel.astro";
 import TextField from "./ui/TextField.astro";
 import ColorSwatchGroup from "./ui/ColorSwatchGroup.astro";
+import Type from "@lucide/astro/icons/type";
 ---
 
-<div data-text-editor>
-  <div data-text-editor-idle>
-    <Button variant="primary" size="md" class="w-full" data-action="text-start-placing">
-      Ajouter un texte
-      <Type size={20} aria-hidden="true" />
-    </Button>
-  </div>
+<EditorShell
+  rootAttr="data-text-editor"
+  idleAttr="data-text-editor-idle"
+  formAttr="data-text-editor-form"
+  statusAttr="data-text-form-status"
+  deleteAttr="data-text-delete-wrap"
+  idleLabel="Ajouter un texte"
+  startAction="text-start-placing"
+  closeAction="text-cancel-or-deselect"
+>
+  <Type slot="idle-icon" size={20} aria-hidden="true" />
 
-  <div data-text-editor-form hidden class="flex flex-col gap-5">
-    <div class="flex items-center justify-between">
-      <span data-text-form-status aria-live="polite" class="font-mono text-xs tracking-wider text-fg-secondary uppercase"></span>
-      <Button variant="ghost" size="sm" data-action="text-cancel-or-deselect" aria-label="Fermer">
-        ✕
-      </Button>
-    </div>
-
+  <Fragment slot="form">
     <TextField
       id="text-value"
       label="Texte"
@@ -34,14 +32,12 @@ import ColorSwatchGroup from "./ui/ColorSwatchGroup.astro";
       <FieldLabel as="legend">Couleur de fond</FieldLabel>
       <ColorSwatchGroup fieldAttr="data-text-field" fieldValue="background-color" groupLabel="Couleur de fond" />
     </fieldset>
+  </Fragment>
 
-    <div data-text-delete-wrap hidden class="border-t border-line-subtle pt-4">
-      <Button variant="ghost" size="sm" class="w-full text-danger hover:bg-surface-elevated" data-action="text-delete">
-        Supprimer ce texte
-      </Button>
-    </div>
-  </div>
-</div>
+  <Button slot="delete" variant="ghost" size="sm" class="w-full text-danger hover:bg-surface-elevated" data-action="text-delete">
+    Supprimer ce texte
+  </Button>
+</EditorShell>
 
 <script>
   import type { MarkerColor } from "../data/markers";
@@ -54,28 +50,21 @@ import ColorSwatchGroup from "./ui/ColorSwatchGroup.astro";
     updateDraft,
     updateSelected,
   } from "../lib/texts-store";
+  import { bindColorSwatches, bindTextField, reflectChecked } from "../lib/editor-binding";
 
   const root = document.querySelector<HTMLElement>("[data-text-editor]");
   if (root) {
     const idle = root.querySelector<HTMLElement>("[data-text-editor-idle]")!;
     const form = root.querySelector<HTMLElement>("[data-text-editor-form]")!;
     const statusEl = root.querySelector<HTMLElement>("[data-text-form-status]")!;
-    const startBtn = root.querySelector<HTMLButtonElement>(
-      'button[data-action="text-start-placing"]',
-    )!;
-    const cancelBtn = root.querySelector<HTMLButtonElement>(
-      'button[data-action="text-cancel-or-deselect"]',
-    )!;
-    const valueInput = root.querySelector<HTMLInputElement>(
-      'input[data-text-field="value"]',
-    )!;
-    const colorBtns = root.querySelectorAll<HTMLButtonElement>(
-      'button[data-text-field="background-color"]',
-    );
+    const startBtn = root.querySelector<HTMLButtonElement>('button[data-action="text-start-placing"]')!;
+    const cancelBtn = root.querySelector<HTMLButtonElement>('button[data-action="text-cancel-or-deselect"]')!;
+    const valueInput = root.querySelector<HTMLInputElement>('input[data-text-field="value"]')!;
+    const colorBtns = root.querySelectorAll<HTMLButtonElement>('button[data-text-field="background-color"]');
     const deleteWrap = root.querySelector<HTMLElement>("[data-text-delete-wrap]")!;
-    const deleteBtn = root.querySelector<HTMLButtonElement>(
-      'button[data-action="text-delete"]',
-    )!;
+    const deleteBtn = root.querySelector<HTMLButtonElement>('button[data-action="text-delete"]')!;
+
+    const store = { getState, updateSelected, updateDraft };
 
     startBtn.addEventListener("click", () => setMode("placing"));
 
@@ -85,20 +74,8 @@ import ColorSwatchGroup from "./ui/ColorSwatchGroup.astro";
       else selectText(null);
     });
 
-    for (const btn of colorBtns) {
-      btn.addEventListener("click", () => {
-        const value = btn.dataset.value as MarkerColor;
-        const { selectedId } = getState();
-        if (selectedId) updateSelected({ backgroundColor: value });
-        else updateDraft({ backgroundColor: value });
-      });
-    }
-
-    valueInput.addEventListener("input", () => {
-      const { selectedId } = getState();
-      if (selectedId) updateSelected({ value: valueInput.value });
-      else updateDraft({ value: valueInput.value });
-    });
+    bindColorSwatches<{ backgroundColor: MarkerColor }>(colorBtns, store, "backgroundColor");
+    bindTextField<{ value: string }>(valueInput, store, "value");
 
     deleteBtn.addEventListener("click", () => {
       deleteSelected();
@@ -107,9 +84,7 @@ import ColorSwatchGroup from "./ui/ColorSwatchGroup.astro";
     document.addEventListener("keydown", (e) => {
       if (e.key !== "Escape") return;
       const target = e.target as HTMLElement | null;
-      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) {
-        return;
-      }
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) return;
       const { mode, selectedId } = getState();
       if (mode === "placing") setMode("idle");
       else if (selectedId) selectText(null);
@@ -137,9 +112,7 @@ import ColorSwatchGroup from "./ui/ColorSwatchGroup.astro";
         state.mode === "placing" ? "Annuler le placement" : "Désélectionner",
       );
 
-      for (const btn of colorBtns) {
-        btn.setAttribute("aria-checked", String(btn.dataset.value === data.backgroundColor));
-      }
+      reflectChecked(colorBtns, data.backgroundColor);
 
       if (valueInput.value !== data.value) {
         valueInput.value = data.value;
