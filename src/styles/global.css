@@ -8,6 +8,7 @@
 
 @import './components/corner-brackets.css';
 @import './components/button.css';
+@import './components/form.css';
 @import './components/grid-overlay.css';
 @import './components/print.css';
 @import './components/map.css';
