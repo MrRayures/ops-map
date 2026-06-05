@@ -10,8 +10,7 @@ import {
   type MarkerShape,
 } from '../data/markers';
 import type { Zone } from '../data/zones';
-import type { Line } from '../data/lines';
-import { LINE_STYLES, type LineStyle } from '../data/lines';
+import { LINE_STYLES, type Line, type LineStyle } from '../data/lines';
 import type { TextItem } from '../data/texts';
 import { DEFAULT_SETTINGS, type SettingsState } from '../data/settings';
 
