@@ -1,0 +1,185 @@
+---
+// LineLayer is a side-effect component: it has no DOM of its own.
+// It renders lines (polylines) on the Leaflet map, plus vertex drag
+// handles for the selected line and a draft preview during placing mode.
+---
+
+<script>
+  import L from "leaflet";
+  import {
+    subscribe,
+    getState,
+    selectLine,
+    moveSelectedVertex,
+    insertVertexAfter,
+    removeVertex,
+  } from "../lib/lines-store";
+  import { whenMapReady } from "../lib/leaflet-map-ref";
+  import type { Line, LineStyle } from "../data/lines";
+
+  function dashArrayFor(style: LineStyle): string | undefined {
+    if (style === "dashed") return "12 8";
+    if (style === "dotted") return "2 6";
+    return undefined; // solid
+  }
+
+  function strokeColorVar(l: Line): string {
+    return `var(--color-${l.color})`;
+  }
+
+  function buildVertexIcon(): L.DivIcon {
+    return L.divIcon({
+      html: `<div class="c-line-vertex"></div>`,
+      className: "",
+      iconSize: [12, 12],
+      iconAnchor: [6, 6],
+    });
+  }
+
+  function buildMidpointIcon(): L.DivIcon {
+    return L.divIcon({
+      html: `<div class="c-line-midpoint"></div>`,
+      className: "",
+      iconSize: [10, 10],
+      iconAnchor: [5, 5],
+    });
+  }
+
+  function buildDraftVertexIcon(): L.DivIcon {
+    return L.divIcon({
+      html: `<div class="c-line-draft-vertex"></div>`,
+      className: "",
+      iconSize: [8, 8],
+      iconAnchor: [4, 4],
+    });
+  }
+
+  whenMapReady((map) => {
+    const linesGroup = L.layerGroup().addTo(map);
+    const handlesGroup = L.layerGroup().addTo(map);
+    const draftGroup = L.layerGroup().addTo(map);
+
+    function buildLinePolyline(l: Line, isSelected: boolean): L.Polyline {
+      const polyline = L.polyline(l.points, {
+        className: `c-line is-color-${l.color}`,
+        color: strokeColorVar(l),
+        weight: isSelected ? 5 : 3,
+        opacity: 0.9,
+        dashArray: dashArrayFor(l.style),
+      });
+      polyline.on("click", (e) => {
+        L.DomEvent.stopPropagation(e);
+        selectLine(l.id);
+      });
+      return polyline;
+    }
+
+    // Track whether a vertex drag is in progress, so the store-driven
+    // re-render doesn't tear down the live handle mid-gesture.
+    let dragging = false;
+
+    function renderLines(): void {
+      if (dragging) return;
+      const state = getState();
+
+      linesGroup.clearLayers();
+      handlesGroup.clearLayers();
+
+      for (const l of state.lines) {
+        const isSelected = state.selectedId === l.id;
+
+        const polyline = buildLinePolyline(l, isSelected);
+        linesGroup.addLayer(polyline);
+
+        if (isSelected) {
+          // Mutable vertex array used during drag to update the polyline
+          // without involving the store (which would trigger a destructive
+          // re-render and break the gesture).
+          const livePoints: [number, number][] = l.points.map((p) => [p[0], p[1]]);
+          const canRemove = l.points.length > 2;
+
+          l.points.forEach((p, idx) => {
+            const handle = L.marker(p, {
+              icon: buildVertexIcon(),
+              draggable: true,
+              keyboard: false,
+            });
+            handle.on("dragstart", () => {
+              dragging = true;
+            });
+            handle.on("drag", (e) => {
+              const ll = (e.target as L.Marker).getLatLng();
+              livePoints[idx] = [ll.lat, ll.lng];
+              polyline.setLatLngs(livePoints);
+            });
+            handle.on("dragend", (e) => {
+              const ll = (e.target as L.Marker).getLatLng();
+              dragging = false;
+              moveSelectedVertex(idx, ll.lat, ll.lng);
+            });
+            handle.on("click", (e) => L.DomEvent.stopPropagation(e));
+            handle.on("contextmenu", (e) => {
+              L.DomEvent.stopPropagation(e);
+              if (e.originalEvent) e.originalEvent.preventDefault();
+              if (canRemove) removeVertex(idx);
+            });
+            handlesGroup.addLayer(handle);
+          });
+
+          // Midpoint "insert vertex" handles between consecutive vertices.
+          // An open line has no last->first segment, so stop at length - 1.
+          for (let i = 0; i < l.points.length - 1; i++) {
+            const a = l.points[i];
+            const b = l.points[i + 1];
+            const mid: [number, number] = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+            const midHandle = L.marker(mid, {
+              icon: buildMidpointIcon(),
+              keyboard: false,
+              interactive: true,
+            });
+            midHandle.on("click", (e) => {
+              L.DomEvent.stopPropagation(e);
+              insertVertexAfter(i, mid[0], mid[1]);
+            });
+            handlesGroup.addLayer(midHandle);
+          }
+        }
+      }
+    }
+
+    function renderDraft(): void {
+      const state = getState();
+      draftGroup.clearLayers();
+      if (state.mode !== "placing") return;
+      const pts = state.draftPoints;
+      if (pts.length === 0) return;
+
+      if (pts.length >= 2) {
+        draftGroup.addLayer(
+          L.polyline(pts as [number, number][], {
+            color: `var(--color-${state.draft.color})`,
+            weight: 3,
+            opacity: 0.9,
+            dashArray: "4 4",
+            interactive: false,
+          }),
+        );
+      }
+
+      // Small dots at each placed vertex.
+      for (const p of pts) {
+        draftGroup.addLayer(
+          L.marker(p, { icon: buildDraftVertexIcon(), interactive: false }),
+        );
+      }
+    }
+
+    function syncAll(): void {
+      renderLines();
+      renderDraft();
+    }
+
+    syncAll();
+    subscribe(syncAll);
+  });
+</script>
