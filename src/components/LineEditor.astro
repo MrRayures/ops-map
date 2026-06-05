@@ -1,0 +1,171 @@
+---
+import EditorShell from "./EditorShell.astro";
+import Button from "./ui/Button.astro";
+import FieldLabel from "./ui/FieldLabel.astro";
+import ColorSwatchGroup from "./ui/ColorSwatchGroup.astro";
+import SegmentedControl from "./ui/SegmentedControl.astro";
+import Spline from "@lucide/astro/icons/spline";
+
+const styleOptions = [
+  { value: "solid", label: "Continu" },
+  { value: "dashed", label: "Tirets" },
+  { value: "dotted", label: "Pointillé" },
+];
+---
+
+<EditorShell
+  rootAttr="data-line-editor"
+  idleAttr="data-line-editor-idle"
+  formAttr="data-line-editor-form"
+  statusAttr="data-line-form-status"
+  deleteAttr="data-line-delete-wrap"
+  idleLabel="Ajouter une ligne"
+  startAction="line-start-placing"
+  closeAction="line-cancel-or-deselect"
+>
+  <Spline slot="idle-icon" size={20} aria-hidden="true" />
+
+  <Fragment slot="form">
+    <p data-line-placing-hint hidden class="text-xs text-fg-secondary">
+      Clic = ajouter un point · Double-clic ou Entrée = valider · Échap = annuler
+    </p>
+    <p data-line-edit-hint hidden class="text-xs text-fg-secondary">
+      Glisser un point pour le déplacer · Clic sur un point intermédiaire pour ajouter un sommet · Clic droit pour supprimer
+    </p>
+
+    <fieldset class="flex flex-col gap-2">
+      <FieldLabel as="legend">Couleur</FieldLabel>
+      <ColorSwatchGroup fieldAttr="data-line-field" fieldValue="color" groupLabel="Couleur de la ligne" />
+    </fieldset>
+
+    <fieldset class="flex flex-col gap-2">
+      <FieldLabel as="legend">Forme</FieldLabel>
+      <SegmentedControl
+        fieldAttr="data-line-field"
+        fieldValue="style"
+        groupLabel="Forme du trait"
+        columns={3}
+        options={styleOptions}
+      />
+    </fieldset>
+
+    <Button variant="primary" size="md" class="w-full" data-action="line-finish">
+      Valider
+    </Button>
+  </Fragment>
+
+  <Button slot="delete" variant="ghost" size="sm" class="w-full text-danger hover:bg-surface-elevated" data-action="line-delete">
+    Supprimer cette ligne
+  </Button>
+</EditorShell>
+
+<script>
+  import type { MarkerColor } from "../data/markers";
+  import type { LineStyle } from "../data/lines";
+  import {
+    deleteSelected,
+    finishDraft,
+    getState,
+    selectLine,
+    setMode,
+    subscribe,
+    updateDraft,
+    updateSelected,
+  } from "../lib/lines-store";
+  import { bindColorSwatches, reflectChecked } from "../lib/editor-binding";
+
+  const root = document.querySelector<HTMLElement>("[data-line-editor]");
+  if (root) {
+    const idle = root.querySelector<HTMLElement>("[data-line-editor-idle]")!;
+    const form = root.querySelector<HTMLElement>("[data-line-editor-form]")!;
+    const statusEl = root.querySelector<HTMLElement>("[data-line-form-status]")!;
+    const placingHint = root.querySelector<HTMLElement>("[data-line-placing-hint]")!;
+    const editHint = root.querySelector<HTMLElement>("[data-line-edit-hint]")!;
+    const startBtn = root.querySelector<HTMLButtonElement>(
+      'button[data-action="line-start-placing"]',
+    )!;
+    const cancelBtn = root.querySelector<HTMLButtonElement>(
+      'button[data-action="line-cancel-or-deselect"]',
+    )!;
+    const finishBtn = root.querySelector<HTMLButtonElement>(
+      'button[data-action="line-finish"]',
+    )!;
+    const colorBtns = root.querySelectorAll<HTMLButtonElement>(
+      'button[data-line-field="color"]',
+    );
+    const styleBtns = root.querySelectorAll<HTMLButtonElement>(
+      'button[data-line-field="style"]',
+    );
+    const deleteWrap = root.querySelector<HTMLElement>("[data-line-delete-wrap]")!;
+    const deleteBtn = root.querySelector<HTMLButtonElement>(
+      'button[data-action="line-delete"]',
+    )!;
+
+    const store = { getState, updateSelected, updateDraft };
+
+    startBtn.addEventListener("click", () => setMode("placing"));
+
+    function closeEditor(): void {
+      const { mode, selectedId, draftPoints } = getState();
+      if (mode === "placing") {
+        if (draftPoints.length >= 2) {
+          finishDraft();
+        } else {
+          setMode("idle");
+        }
+      } else if (selectedId) {
+        selectLine(null);
+      }
+    }
+
+    cancelBtn.addEventListener("click", () => {
+      const { mode } = getState();
+      if (mode === "placing") setMode("idle");
+      else selectLine(null);
+    });
+    finishBtn.addEventListener("click", closeEditor);
+
+    bindColorSwatches<{ color: MarkerColor }>(colorBtns, store, "color");
+    bindColorSwatches<{ style: LineStyle }>(styleBtns, store, "style");
+
+    deleteBtn.addEventListener("click", () => {
+      deleteSelected();
+    });
+
+    function render(): void {
+      const state = getState();
+      const showIdle = state.mode === "idle" && state.selectedId === null;
+      idle.hidden = !showIdle;
+      form.hidden = showIdle;
+      deleteWrap.hidden = !state.selectedId;
+      placingHint.hidden = state.mode !== "placing";
+      editHint.hidden = state.selectedId === null;
+
+      if (showIdle) return;
+
+      const source = state.selectedId
+        ? state.lines.find((l) => l.id === state.selectedId)
+        : null;
+      const data = source ?? state.draft;
+
+      statusEl.textContent =
+        state.mode === "placing"
+          ? `Placement (${state.draftPoints.length} point${state.draftPoints.length > 1 ? "s" : ""})`
+          : "Ligne sélectionnée";
+
+      cancelBtn.setAttribute(
+        "aria-label",
+        state.mode === "placing" ? "Annuler le placement" : "Désélectionner",
+      );
+
+      finishBtn.disabled =
+        state.mode === "placing" && state.draftPoints.length < 2;
+
+      reflectChecked(colorBtns, data.color);
+      reflectChecked(styleBtns, data.style);
+    }
+
+    render();
+    subscribe(render);
+  }
+</script>
