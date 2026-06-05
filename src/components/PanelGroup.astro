@@ -7,6 +7,7 @@ import AddressSearch from "./AddressSearch.astro";
 import MarkerEditor from "./MarkerEditor.astro";
 import TextEditor from "./TextEditor.astro";
 import ZoneEditor from "./ZoneEditor.astro";
+import LineEditor from "./LineEditor.astro";
 
 const OP_ADJECTIVES = [
   "DARK",
@@ -65,6 +66,7 @@ const terrainName = "TERRAIN";
 
         {panel.id === "markers" && <MarkerEditor />}
         {panel.id === "zones" && <ZoneEditor />}
+        {panel.id === "lines" && <LineEditor />}
         {panel.id === "texts" && <TextEditor />}
         {panel.id === "search" && <AddressSearch />}
 
