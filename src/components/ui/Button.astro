@@ -25,23 +25,18 @@ const {
   ...rest
 } = Astro.props;
 
-const base =
-  "inline-flex cursor-pointer items-center justify-center gap-2 rounded-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50";
-
 const variantClass: Record<Variant, string> = {
-  primary: "bg-accent text-accent-on hover:bg-accent-hover",
-  secondary:
-    "border border-line-default bg-surface-card text-fg-primary hover:bg-surface-elevated",
-  ghost:
-    "bg-transparent text-fg-secondary hover:bg-surface-elevated hover:text-fg-primary",
+  primary: "c-btn--primary",
+  secondary: "c-btn--secondary",
+  ghost: "c-btn--ghost",
 };
 
 const sizeClass: Record<Size, string> = {
-  sm: "h-8 px-3 text-sm",
-  md: "h-10 px-4 text-sm",
+  sm: "c-btn--sm",
+  md: "c-btn--md",
 };
 
-const classes = [base, variantClass[variant], sizeClass[size], extraClass]
+const classes = ["c-btn", variantClass[variant], sizeClass[size], extraClass]
   .filter(Boolean)
   .join(" ");
 ---

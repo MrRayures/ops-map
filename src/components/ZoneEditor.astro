@@ -1,95 +1,44 @@
 ---
-import VectorSquare from "@lucide/astro/icons/vector-square";
+import EditorShell from "./EditorShell.astro";
 import Button from "./ui/Button.astro";
-import { MARKER_COLORS, type MarkerColor } from "../data/markers";
-
-const colorClass: Record<MarkerColor, string> = {
-  "team-red": "bg-team-red",
-  "team-blue": "bg-team-blue",
-  "team-green": "bg-team-green",
-  "team-purple": "bg-team-purple",
-  "marker-objective": "bg-marker-objective",
-  "marker-spawn": "bg-marker-spawn",
-  "marker-danger": "bg-marker-danger",
-  "marker-cover": "bg-marker-cover",
-};
-
-const colorLabels: Record<MarkerColor, string> = {
-  "team-red": "Équipe rouge",
-  "team-blue": "Équipe bleue",
-  "team-green": "Équipe verte",
-  "team-purple": "Équipe violette",
-  "marker-objective": "Objectif",
-  "marker-spawn": "Spawn",
-  "marker-danger": "Danger",
-  "marker-cover": "Couverture",
-};
+import FieldLabel from "./ui/FieldLabel.astro";
+import TextField from "./ui/TextField.astro";
+import ColorSwatchGroup from "./ui/ColorSwatchGroup.astro";
+import VectorSquare from "@lucide/astro/icons/vector-square";
 ---
 
-<div data-zone-editor>
-  <div data-zone-editor-idle>
-    <Button variant="primary" size="md" class="w-full" data-action="zone-start-placing">
-      Ajouter une zone
-      <VectorSquare size={20} aria-hidden="true" />
-    </Button>
-  </div>
+<EditorShell
+  rootAttr="data-zone-editor"
+  idleAttr="data-zone-editor-idle"
+  formAttr="data-zone-editor-form"
+  statusAttr="data-zone-form-status"
+  deleteAttr="data-zone-delete-wrap"
+  idleLabel="Ajouter une zone"
+  startAction="zone-start-placing"
+  closeAction="zone-cancel-or-deselect"
+>
+  <VectorSquare slot="idle-icon" size={20} aria-hidden="true" />
 
-  <div data-zone-editor-form hidden class="flex flex-col gap-5">
-    <div class="flex items-center justify-between">
-      <span data-zone-form-status aria-live="polite" class="font-mono text-xs tracking-wider text-fg-secondary uppercase"></span>
-      <Button variant="ghost" size="sm" data-action="zone-cancel-or-deselect" aria-label="Fermer">
-        ✕
-      </Button>
-    </div>
-
+  <Fragment slot="form">
     <p data-zone-placing-hint hidden class="text-xs text-fg-secondary">
       Clic = ajouter un sommet · Double-clic ou Entrée = valider · Échap = annuler
     </p>
-
     <p data-zone-edit-hint hidden class="text-xs text-fg-secondary">
       Glisser un sommet pour le déplacer · Clic sur un point intermédiaire pour ajouter un sommet · Clic droit sur un sommet pour le supprimer
     </p>
 
     <fieldset class="flex flex-col gap-2">
-      <legend class="font-mono text-xs font-semibold tracking-wider text-fg-secondary uppercase">
-        Couleur
-      </legend>
-      <div class="grid grid-cols-4 gap-2" role="radiogroup" aria-label="Couleur de la zone">
-        {
-          MARKER_COLORS.map((color) => (
-            <button
-              type="button"
-              role="radio"
-              aria-checked="false"
-              data-zone-field="color"
-              data-value={color}
-              aria-label={colorLabels[color]}
-              class:list={[
-                "h-10 rounded-sm border border-line-default transition-colors aria-checked:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
-                colorClass[color],
-              ]}
-            />
-          ))
-        }
-      </div>
+      <FieldLabel as="legend">Couleur</FieldLabel>
+      <ColorSwatchGroup fieldAttr="data-zone-field" fieldValue="color" groupLabel="Couleur de la zone" />
     </fieldset>
 
-    <div class="flex flex-col gap-2">
-      <label
-        for="zone-label"
-        class="font-mono text-xs font-semibold tracking-wider text-fg-secondary uppercase"
-      >
-        Label (optionnel)
-      </label>
-      <input
-        id="zone-label"
-        type="text"
-        data-zone-field="label"
-        maxlength="40"
-        class="w-full rounded-sm border border-line-default bg-surface-base px-3 py-2 text-sm text-fg-primary placeholder:text-fg-muted focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-        placeholder="ALPHA"
-      />
-    </div>
+    <TextField
+      id="zone-label"
+      label="Label (optionnel)"
+      placeholder="ALPHA"
+      maxlength={40}
+      data-zone-field="label"
+    />
 
     <label class="flex cursor-pointer items-start gap-3 rounded-sm border border-line-default px-3 py-2 has-[:checked]:border-accent has-[:checked]:bg-surface-elevated has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent">
       <input
@@ -106,14 +55,12 @@ const colorLabels: Record<MarkerColor, string> = {
     <Button variant="primary" size="md" class="w-full" data-action="zone-finish">
       Valider
     </Button>
+  </Fragment>
 
-    <div data-zone-delete-wrap hidden class="border-t border-line-subtle pt-4">
-      <Button variant="ghost" size="sm" class="w-full text-danger hover:bg-surface-elevated" data-action="zone-delete">
-        Supprimer cette zone
-      </Button>
-    </div>
-  </div>
-</div>
+  <Button slot="delete" variant="ghost" size="sm" class="w-full text-danger hover:bg-surface-elevated" data-action="zone-delete">
+    Supprimer cette zone
+  </Button>
+</EditorShell>
 
 <script>
   import type { MarkerColor } from "../data/markers";
@@ -127,6 +74,7 @@ const colorLabels: Record<MarkerColor, string> = {
     updateDraft,
     updateSelected,
   } from "../lib/zones-store";
+  import { bindColorSwatches, bindTextField, reflectChecked } from "../lib/editor-binding";
 
   const root = document.querySelector<HTMLElement>("[data-zone-editor]");
   if (root) {
@@ -158,6 +106,8 @@ const colorLabels: Record<MarkerColor, string> = {
       'button[data-action="zone-delete"]',
     )!;
 
+    const store = { getState, updateSelected, updateDraft };
+
     startBtn.addEventListener("click", () => setMode("placing"));
 
     function closeEditor(): void {
@@ -181,20 +131,9 @@ const colorLabels: Record<MarkerColor, string> = {
     });
     finishBtn.addEventListener("click", closeEditor);
 
-    for (const btn of colorBtns) {
-      btn.addEventListener("click", () => {
-        const value = btn.dataset.value as MarkerColor;
-        const { selectedId } = getState();
-        if (selectedId) updateSelected({ color: value });
-        else updateDraft({ color: value });
-      });
-    }
+    bindColorSwatches<{ color: MarkerColor }>(colorBtns, store, "color");
 
-    labelInput.addEventListener("input", () => {
-      const { selectedId } = getState();
-      if (selectedId) updateSelected({ label: labelInput.value });
-      else updateDraft({ label: labelInput.value });
-    });
+    bindTextField<{ label: string }>(labelInput, store, "label");
 
     playAreaCheckbox.addEventListener("change", () => {
       const isPlayArea = playAreaCheckbox.checked;
@@ -237,9 +176,7 @@ const colorLabels: Record<MarkerColor, string> = {
       finishBtn.disabled =
         state.mode === "placing" && state.draftPoints.length < 3;
 
-      for (const btn of colorBtns) {
-        btn.setAttribute("aria-checked", String(btn.dataset.value === data.color));
-      }
+      reflectChecked(colorBtns, data.color);
 
       const labelValue = data.label ?? "";
       if (labelInput.value !== labelValue) {

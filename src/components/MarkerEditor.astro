@@ -1,12 +1,15 @@
 ---
-import MapPinPlus from "@lucide/astro/icons/map-pin-plus";
+import EditorShell from "./EditorShell.astro";
 import Button from "./ui/Button.astro";
+import FieldLabel from "./ui/FieldLabel.astro";
+import TextField from "./ui/TextField.astro";
+import ColorSwatchGroup from "./ui/ColorSwatchGroup.astro";
+import SegmentedControl from "./ui/SegmentedControl.astro";
+import MapPinPlus from "@lucide/astro/icons/map-pin-plus";
 import {
   MARKER_SHAPES,
-  MARKER_COLORS,
   MARKER_ICONS,
   type MarkerShape,
-  type MarkerColor,
 } from "../data/markers";
 import { buildIconSvg } from "../data/marker-icons";
 
@@ -16,51 +19,23 @@ const shapeLabels: Record<MarkerShape, string> = {
   circle: "Cercle",
   diamond: "Losange",
 };
-
-const colorClass: Record<MarkerColor, string> = {
-  "team-red": "bg-team-red",
-  "team-blue": "bg-team-blue",
-  "team-green": "bg-team-green",
-  "team-purple": "bg-team-purple",
-  "marker-objective": "bg-marker-objective",
-  "marker-spawn": "bg-marker-spawn",
-  "marker-danger": "bg-marker-danger",
-  "marker-cover": "bg-marker-cover",
-};
-
-const colorLabels: Record<MarkerColor, string> = {
-  "team-red": "Équipe rouge",
-  "team-blue": "Équipe bleue",
-  "team-green": "Équipe verte",
-  "team-purple": "Équipe violette",
-  "marker-objective": "Objectif",
-  "marker-spawn": "Spawn",
-  "marker-danger": "Danger",
-  "marker-cover": "Couverture",
-};
 ---
 
-<div data-marker-editor>
-  <div data-marker-editor-idle>
-    <Button variant="primary" size="md" class="w-full" data-action="start-placing">
-      Ajouter un marqueur
-      <MapPinPlus size={24} aria-hidden="true" />
-    </Button>
-  </div>
+<EditorShell
+  rootAttr="data-marker-editor"
+  idleAttr="data-marker-editor-idle"
+  formAttr="data-marker-editor-form"
+  statusAttr="data-form-status"
+  deleteAttr="data-delete-wrap"
+  idleLabel="Ajouter un marqueur"
+  startAction="start-placing"
+  closeAction="cancel-or-deselect"
+>
+  <MapPinPlus slot="idle-icon" size={24} aria-hidden="true" />
 
-  <div data-marker-editor-form hidden class="flex flex-col gap-5">
-    <div class="flex items-center justify-between">
-      <span data-form-status aria-live="polite" class="font-mono text-xs tracking-wider text-fg-secondary uppercase"
-      ></span>
-      <Button variant="ghost" size="sm" data-action="cancel-or-deselect" aria-label="Fermer">
-        ✕
-      </Button>
-    </div>
-
+  <Fragment slot="form">
     <fieldset class="flex flex-col gap-2">
-      <legend class="font-mono text-xs font-semibold tracking-wider text-fg-secondary uppercase">
-        Forme
-      </legend>
+      <FieldLabel as="legend">Forme</FieldLabel>
       <div class="grid grid-cols-4 gap-2" role="radiogroup" aria-label="Forme du marqueur">
         {
           MARKER_SHAPES.map((shape) => (
@@ -83,56 +58,28 @@ const colorLabels: Record<MarkerColor, string> = {
     </fieldset>
 
     <fieldset class="flex flex-col gap-2">
-      <legend class="font-mono text-xs font-semibold tracking-wider text-fg-secondary uppercase">
-        Couleur
-      </legend>
-      <div class="grid grid-cols-4 gap-2" role="radiogroup" aria-label="Couleur du marqueur">
-        {
-          MARKER_COLORS.map((color) => (
-            <button
-              type="button"
-              role="radio"
-              aria-checked="false"
-              data-field="color"
-              data-value={color}
-              aria-label={colorLabels[color]}
-              class:list={[
-                "h-10 rounded-sm border border-line-default transition-colors aria-checked:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
-                colorClass[color],
-              ]}
-            />
-          ))
-        }
-      </div>
+      <FieldLabel as="legend">Couleur</FieldLabel>
+      <ColorSwatchGroup fieldAttr="data-field" fieldValue="color" groupLabel="Couleur du marqueur" />
     </fieldset>
 
     <fieldset class="flex flex-col gap-2">
-      <legend class="font-mono text-xs font-semibold tracking-wider text-fg-secondary uppercase">
-        Contenu
-      </legend>
-      <div class="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Type de contenu">
-        {
-          (["text", "icon"] as const).map((kind) => (
-            <button
-              type="button"
-              role="radio"
-              aria-checked="false"
-              data-field="content-kind"
-              data-value={kind}
-              class="rounded-sm border border-line-default bg-transparent px-3 py-2 text-sm text-fg-secondary transition-colors hover:bg-surface-elevated hover:text-fg-primary aria-checked:border-accent aria-checked:bg-surface-elevated aria-checked:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-            >
-              {kind === "text" ? "Texte" : "Icône"}
-            </button>
-          ))
-        }
-      </div>
+      <FieldLabel as="legend">Contenu</FieldLabel>
+      <SegmentedControl
+        fieldAttr="data-field"
+        fieldValue="content-kind"
+        groupLabel="Type de contenu"
+        options={[
+          { value: "text", label: "Texte" },
+          { value: "icon", label: "Icône" },
+        ]}
+      />
 
       <div data-content-text class="flex flex-col gap-2" hidden>
         <input
           type="text"
           data-field="content-text"
           maxlength="3"
-          class="w-full rounded-sm border border-line-default bg-surface-base px-3 py-2 text-sm text-fg-primary uppercase placeholder:text-fg-muted focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          class="c-field-input uppercase"
           placeholder="LZ"
           aria-label="Contenu texte (1 à 3 caractères)"
         />
@@ -156,46 +103,36 @@ const colorLabels: Record<MarkerColor, string> = {
       </div>
     </fieldset>
 
-    <div class="flex flex-col gap-2">
-      <label
-        for="marker-label"
-        class="font-mono text-xs font-semibold tracking-wider text-fg-secondary uppercase"
-      >
-        Label (optionnel)
-      </label>
-      <input
-        id="marker-label"
-        type="text"
-        data-field="label"
-        maxlength="40"
-        class="w-full rounded-sm border border-line-default bg-surface-base px-3 py-2 text-sm text-fg-primary placeholder:text-fg-muted focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-        placeholder="MIKE 4"
-      />
-    </div>
+    <TextField
+      id="marker-label"
+      label="Label (optionnel)"
+      placeholder="MIKE 4"
+      maxlength={40}
+      data-field="label"
+    />
 
     <Button variant="primary" size="md" class="w-full" data-action="finish">
       Valider
     </Button>
+  </Fragment>
 
-    <div data-delete-wrap hidden class="border-t border-line-subtle pt-4">
-      <Button variant="ghost" size="sm" class="w-full text-danger hover:bg-surface-elevated" data-action="delete">
-        Supprimer ce marqueur
-      </Button>
-    </div>
-  </div>
-</div>
+  <Button slot="delete" variant="ghost" size="sm" class="w-full text-danger hover:bg-surface-elevated" data-action="delete">
+    Supprimer ce marqueur
+  </Button>
+</EditorShell>
 
 <script>
   import type { MarkerColor, MarkerContent, MarkerIconId, MarkerShape } from "../data/markers";
-import {
-deleteSelected,
-getState,
-selectMarker,
-setMode,
-subscribe,
-updateDraft,
-updateSelected,
-} from "../lib/markers-store";
+  import {
+    deleteSelected,
+    getState,
+    selectMarker,
+    setMode,
+    subscribe,
+    updateDraft,
+    updateSelected,
+  } from "../lib/markers-store";
+  import { bindColorSwatches, bindTextField, reflectChecked } from "../lib/editor-binding";
 
   const root = document.querySelector<HTMLElement>("[data-marker-editor]");
   if (!root) {
@@ -238,6 +175,8 @@ updateSelected,
       'button[data-action="delete"]',
     )!;
 
+    const store = { getState, updateSelected, updateDraft };
+
     startBtn.addEventListener("click", () => setMode("placing"));
 
     function closeEditor(): void {
@@ -258,14 +197,7 @@ updateSelected,
       });
     }
 
-    for (const btn of colorBtns) {
-      btn.addEventListener("click", () => {
-        const value = btn.dataset.value as MarkerColor;
-        const { selectedId } = getState();
-        if (selectedId) updateSelected({ color: value });
-        else updateDraft({ color: value });
-      });
-    }
+    bindColorSwatches<{ color: MarkerColor }>(colorBtns, store, "color");
 
     for (const btn of contentKindBtns) {
       btn.addEventListener("click", () => {
@@ -307,11 +239,7 @@ updateSelected,
       });
     }
 
-    labelInput.addEventListener("input", () => {
-      const { selectedId } = getState();
-      if (selectedId) updateSelected({ label: labelInput.value });
-      else updateDraft({ label: labelInput.value });
-    });
+    bindTextField<{ label: string }>(labelInput, store, "label");
 
     deleteBtn.addEventListener("click", () => {
       deleteSelected();
@@ -361,9 +289,7 @@ updateSelected,
       for (const btn of shapeBtns) {
         btn.setAttribute("aria-checked", String(btn.dataset.value === data.shape));
       }
-      for (const btn of colorBtns) {
-        btn.setAttribute("aria-checked", String(btn.dataset.value === data.color));
-      }
+      reflectChecked(colorBtns, data.color);
 
       // Reflect label
       const labelValue = data.label ?? "";

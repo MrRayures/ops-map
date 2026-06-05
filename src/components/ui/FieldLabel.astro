@@ -1,0 +1,25 @@
+---
+type As = "label" | "legend" | "span";
+
+interface Props {
+  as?: As;
+  for?: string;
+  class?: string;
+}
+
+const { as = "span", for: htmlFor, class: extraClass } = Astro.props;
+const classes = ["c-field-label", extraClass].filter(Boolean).join(" ");
+const Tag = as;
+---
+
+{
+  as === "label" ? (
+    <label class={classes} for={htmlFor}>
+      <slot />
+    </label>
+  ) : (
+    <Tag class={classes}>
+      <slot />
+    </Tag>
+  )
+}

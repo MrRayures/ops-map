@@ -1,0 +1,61 @@
+---
+import Button from "./ui/Button.astro";
+
+interface Props {
+  /** Root data attribute, e.g. "data-marker-editor". */
+  rootAttr: string;
+  /** Idle wrapper data attribute, e.g. "data-marker-editor-idle". */
+  idleAttr: string;
+  /** Form wrapper data attribute, e.g. "data-marker-editor-form". */
+  formAttr: string;
+  /** Status span data attribute, e.g. "data-form-status". */
+  statusAttr: string;
+  /** Delete wrapper data attribute, e.g. "data-delete-wrap". */
+  deleteAttr: string;
+  /** Idle button label, e.g. "Ajouter un marqueur". */
+  idleLabel: string;
+  /** data-action of the idle/start button, e.g. "start-placing". */
+  startAction: string;
+  /** data-action of the close button, e.g. "cancel-or-deselect". */
+  closeAction: string;
+}
+
+const {
+  rootAttr,
+  idleAttr,
+  formAttr,
+  statusAttr,
+  deleteAttr,
+  idleLabel,
+  startAction,
+  closeAction,
+} = Astro.props;
+---
+
+<div {...{ [rootAttr]: "" }}>
+  <div {...{ [idleAttr]: "" }}>
+    <Button variant="primary" size="md" class="w-full" data-action={startAction}>
+      {idleLabel}
+      <slot name="idle-icon" />
+    </Button>
+  </div>
+
+  <div {...{ [formAttr]: "" }} hidden class="flex flex-col gap-5">
+    <div class="flex items-center justify-between">
+      <span
+        {...{ [statusAttr]: "" }}
+        aria-live="polite"
+        class="font-mono text-xs tracking-wider text-fg-secondary uppercase"
+      ></span>
+      <Button variant="ghost" size="sm" data-action={closeAction} aria-label="Fermer">
+        ✕
+      </Button>
+    </div>
+
+    <slot name="form" />
+
+    <div {...{ [deleteAttr]: "" }} hidden class="border-t border-line-subtle pt-4">
+      <slot name="delete" />
+    </div>
+  </div>
+</div>

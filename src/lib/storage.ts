@@ -23,7 +23,7 @@ declare global {
 }
 
 const STORAGE_KEY = 'ops-map:state';
-const SCHEMA_VERSION = 8;
+export const SCHEMA_VERSION = 8;
 
 export interface PersistedState {
   version: 8;

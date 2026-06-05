@@ -1,0 +1,39 @@
+---
+import FieldLabel from "./FieldLabel.astro";
+
+interface Props {
+  id: string;
+  label: string;
+  placeholder?: string;
+  maxlength?: number;
+  uppercase?: boolean;
+  class?: string;
+  [key: `data-${string}`]: string | number | boolean | undefined;
+}
+
+const {
+  id,
+  label,
+  placeholder,
+  maxlength,
+  uppercase = false,
+  class: extraClass,
+  ...rest
+} = Astro.props;
+
+const inputClasses = ["c-field-input", uppercase ? "uppercase" : "", extraClass]
+  .filter(Boolean)
+  .join(" ");
+---
+
+<div class="flex flex-col gap-2">
+  <FieldLabel as="label" for={id}>{label}</FieldLabel>
+  <input
+    id={id}
+    type="text"
+    class={inputClasses}
+    placeholder={placeholder}
+    maxlength={maxlength}
+    {...rest}
+  />
+</div>

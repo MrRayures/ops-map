@@ -1,0 +1,30 @@
+---
+import { MARKER_COLORS } from "../../data/markers";
+import { MARKER_COLOR_CLASS, MARKER_COLOR_LABELS } from "../../data/marker-colors";
+
+interface Props {
+  /** The data attribute name used as the field key, e.g. "data-field" or "data-zone-field". */
+  fieldAttr: string;
+  /** The value of the field attribute, e.g. "color" or "background-color". */
+  fieldValue: string;
+  groupLabel: string;
+}
+
+const { fieldAttr, fieldValue, groupLabel } = Astro.props;
+---
+
+<div class="grid grid-cols-4 gap-2" role="radiogroup" aria-label={groupLabel}>
+  {
+    MARKER_COLORS.map((color) => (
+      <button
+        type="button"
+        role="radio"
+        aria-checked="false"
+        data-value={color}
+        aria-label={MARKER_COLOR_LABELS[color]}
+        class:list={["c-swatch", MARKER_COLOR_CLASS[color]]}
+        {...{ [fieldAttr]: fieldValue }}
+      />
+    ))
+  }
+</div>
