@@ -11,17 +11,24 @@ import {
   subscribe as subscribeZones,
 } from './zones-store';
 import {
+  getState as getLinesState,
+  selectLine,
+  setMode as setLinesMode,
+  subscribe as subscribeLines,
+} from './lines-store';
+import {
   getState as getTextsState,
   selectText,
   setMode as setTextsMode,
   subscribe as subscribeTexts,
 } from './texts-store';
 
-type Active = 'markers' | 'zones' | 'texts';
+type Active = 'markers' | 'zones' | 'lines' | 'texts';
 
 const panelForStore: Record<Active, string> = {
   markers: 'panel-markers',
   zones: 'panel-zones',
+  lines: 'panel-lines',
   texts: 'panel-texts',
 };
 
@@ -36,6 +43,7 @@ function openEditPanel(active: Active): void {
 function clearOthersForSelect(active: Active): void {
   if (active !== 'markers' && getMarkersState().selectedId !== null) selectMarker(null);
   if (active !== 'zones' && getZonesState().selectedId !== null) selectZone(null);
+  if (active !== 'lines' && getLinesState().selectedId !== null) selectLine(null);
   if (active !== 'texts' && getTextsState().selectedId !== null) selectText(null);
 }
 
@@ -47,6 +55,10 @@ function clearOthersForPlacing(active: Active): void {
   if (active !== 'zones') {
     if (getZonesState().mode === 'placing') setZonesMode('idle');
     if (getZonesState().selectedId !== null) selectZone(null);
+  }
+  if (active !== 'lines') {
+    if (getLinesState().mode === 'placing') setLinesMode('idle');
+    if (getLinesState().selectedId !== null) selectLine(null);
   }
   if (active !== 'texts') {
     if (getTextsState().mode === 'placing') setTextsMode('idle');
@@ -85,6 +97,22 @@ export function initSelectionCoordinator(): void {
     if (s.mode !== prevZoneMode) {
       prevZoneMode = s.mode;
       if (s.mode === 'placing') clearOthersForPlacing('zones');
+    }
+  });
+
+  let prevLineSel = getLinesState().selectedId;
+  let prevLineMode = getLinesState().mode;
+  subscribeLines((s) => {
+    if (s.selectedId !== prevLineSel) {
+      prevLineSel = s.selectedId;
+      if (s.selectedId !== null) {
+        clearOthersForSelect('lines');
+        openEditPanel('lines');
+      }
+    }
+    if (s.mode !== prevLineMode) {
+      prevLineMode = s.mode;
+      if (s.mode === 'placing') clearOthersForPlacing('lines');
     }
   });
 
