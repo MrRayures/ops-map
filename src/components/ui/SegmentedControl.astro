@@ -1,0 +1,34 @@
+---
+interface Option {
+  value: string;
+  label: string;
+}
+
+interface Props {
+  fieldAttr: string;
+  fieldValue: string;
+  groupLabel: string;
+  options: Option[];
+  columns?: number;
+}
+
+const { fieldAttr, fieldValue, groupLabel, options, columns = 2 } = Astro.props;
+const gridClass = `grid grid-cols-${columns} gap-2`;
+---
+
+<div class={gridClass} role="radiogroup" aria-label={groupLabel}>
+  {
+    options.map((opt) => (
+      <button
+        type="button"
+        role="radio"
+        aria-checked="false"
+        data-value={opt.value}
+        class="c-segment"
+        {...{ [fieldAttr]: fieldValue }}
+      >
+        {opt.label}
+      </button>
+    ))
+  }
+</div>
