@@ -48,6 +48,14 @@ setMode as setZoneMode,
 subscribe as subscribeZones,
 } from "../lib/zones-store";
 import {
+addDraftPoint as addLineDraftPoint,
+finishDraft as finishLineDraft,
+getState as getLinesState,
+selectLine,
+setMode as setLineMode,
+subscribe as subscribeLines,
+} from "../lib/lines-store";
+import {
 createText,
 getState as getTextsState,
 selectText,
@@ -397,26 +405,31 @@ import { update } from "../lib/storage";
       const placing =
         getMarkersState().mode === "placing" ||
         getZonesState().mode === "placing" ||
+        getLinesState().mode === "placing" ||
         getTextsState().mode === "placing";
       container!.classList.toggle("is-placing", placing);
     }
     applyPlacingClass();
     subscribeMarkers(applyPlacingClass);
     subscribeZones(applyPlacingClass);
+    subscribeLines(applyPlacingClass);
     subscribeTexts(applyPlacingClass);
 
     // Toggle Leaflet's double-click zoom: must be off while a zone is
     // being placed, otherwise the close-polygon dblclick zooms the map.
     function applyDoubleClickZoom(): void {
-      if (getZonesState().mode === "placing") map.doubleClickZoom.disable();
+      if (getZonesState().mode === "placing" || getLinesState().mode === "placing")
+        map.doubleClickZoom.disable();
       else map.doubleClickZoom.enable();
     }
     applyDoubleClickZoom();
     subscribeZones(applyDoubleClickZoom);
+    subscribeLines(applyDoubleClickZoom);
 
     // Pending click handler so that a dblclick can cancel the trailing
     // single-click that would otherwise add a vertex.
     let pendingZoneClick: number | null = null;
+    let pendingLineClick: number | null = null;
 
     map.on("click", (e) => {
       const zoneState = getZonesState();
@@ -426,6 +439,17 @@ import { update } from "../lib/storage";
         pendingZoneClick = window.setTimeout(() => {
           addDraftPoint(lat, lng);
           pendingZoneClick = null;
+        }, 250);
+        return;
+      }
+
+      const lineState = getLinesState();
+      if (lineState.mode === "placing") {
+        if (pendingLineClick !== null) clearTimeout(pendingLineClick);
+        const { lat, lng } = e.latlng;
+        pendingLineClick = window.setTimeout(() => {
+          addLineDraftPoint(lat, lng);
+          pendingLineClick = null;
         }, 250);
         return;
       }
@@ -444,6 +468,7 @@ import { update } from "../lib/storage";
 
       if (markerState.selectedId !== null) selectMarker(null);
       if (zoneState.selectedId !== null) selectZone(null);
+      if (getLinesState().selectedId !== null) selectLine(null);
       if (textState.selectedId !== null) selectText(null);
     });
 
@@ -459,6 +484,18 @@ import { update } from "../lib/storage";
       if (getZonesState().mode === "placing") setZoneMode("idle");
     });
 
+    map.on("dblclick", (e) => {
+      const lineState = getLinesState();
+      if (lineState.mode !== "placing") return;
+      L.DomEvent.stopPropagation(e);
+      if (pendingLineClick !== null) {
+        clearTimeout(pendingLineClick);
+        pendingLineClick = null;
+      }
+      finishLineDraft(); // no-op if < 2 points
+      if (getLinesState().mode === "placing") setLineMode("idle");
+    });
+
     document.addEventListener("keydown", (e) => {
       const zoneState = getZonesState();
       if (zoneState.mode !== "placing") return;
@@ -471,6 +508,21 @@ import { update } from "../lib/storage";
         if (getZonesState().mode === "placing") setZoneMode("idle");
       } else if (e.key === "Escape" && !inField) {
         setZoneMode("idle");
+      }
+    });
+
+    document.addEventListener("keydown", (e) => {
+      const lineState = getLinesState();
+      if (lineState.mode !== "placing") return;
+      const target = e.target as HTMLElement | null;
+      const inField =
+        target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA");
+      if (e.key === "Enter" && !inField) {
+        e.preventDefault();
+        finishLineDraft();
+        if (getLinesState().mode === "placing") setLineMode("idle");
+      } else if (e.key === "Escape" && !inField) {
+        setLineMode("idle");
       }
     });
   }
