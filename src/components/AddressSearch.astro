@@ -1,6 +1,13 @@
 ---
 import Search from "@lucide/astro/icons/search";
+import LocateFixed from "@lucide/astro/icons/locate-fixed";
+import Button from "./ui/Button.astro";
 ---
+
+<Button variant="secondary" size="md" class="w-full" data-action="geolocate">
+  <LocateFixed size={16} aria-hidden="true" />
+  Me géolocaliser
+</Button>
 
 <form role="search" id="address-form" class="flex flex-col gap-2">
   <label for="address-q" class="font-mono text-xs font-semibold tracking-wider text-fg-secondary uppercase">
@@ -119,6 +126,57 @@ import Search from "@lucide/astro/icons/search";
       if (timer) clearTimeout(timer);
       const q = input.value.trim();
       if (q) search(q);
+    });
+  }
+
+  // --- Geolocation: fly the map to the user's current position ---
+  const geolocateBtn = document.querySelector<HTMLButtonElement>(
+    'button[data-action="geolocate"]',
+  );
+  const geoStatus = document.getElementById("address-status");
+
+  if (geolocateBtn && geoStatus) {
+    function geoMessage(code: number): string {
+      switch (code) {
+        case 1: // PERMISSION_DENIED
+          return "Permission de localisation refusée";
+        case 2: // POSITION_UNAVAILABLE
+          return "Position indisponible";
+        case 3: // TIMEOUT
+          return "La localisation a expiré";
+        default:
+          return "Échec de la géolocalisation";
+      }
+    }
+
+    geolocateBtn.addEventListener("click", () => {
+      if (!("geolocation" in navigator)) {
+        geoStatus!.textContent = "Géolocalisation non supportée";
+        return;
+      }
+      geoStatus!.textContent = "Localisation…";
+      geolocateBtn!.disabled = true;
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          window.dispatchEvent(
+            new CustomEvent("map:fly", {
+              detail: {
+                center: [pos.coords.latitude, pos.coords.longitude] as [
+                  number,
+                  number,
+                ],
+              },
+            }),
+          );
+          geoStatus!.textContent = "";
+          geolocateBtn!.disabled = false;
+        },
+        (err) => {
+          geoStatus!.textContent = geoMessage(err.code);
+          geolocateBtn!.disabled = false;
+        },
+        { enableHighAccuracy: true, timeout: 10000 },
+      );
     });
   }
 </script>
