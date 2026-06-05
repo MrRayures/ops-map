@@ -123,16 +123,16 @@ const shapeLabels: Record<MarkerShape, string> = {
 
 <script>
   import type { MarkerColor, MarkerContent, MarkerIconId, MarkerShape } from "../data/markers";
-import {
-deleteSelected,
-getState,
-selectMarker,
-setMode,
-subscribe,
-updateDraft,
-updateSelected,
-} from "../lib/markers-store";
-import { bindColorSwatches, bindTextField, reflectChecked } from "../lib/editor-binding";
+  import {
+    deleteSelected,
+    getState,
+    selectMarker,
+    setMode,
+    subscribe,
+    updateDraft,
+    updateSelected,
+  } from "../lib/markers-store";
+  import { bindColorSwatches, bindTextField, reflectChecked } from "../lib/editor-binding";
 
   const root = document.querySelector<HTMLElement>("[data-marker-editor]");
   if (!root) {
