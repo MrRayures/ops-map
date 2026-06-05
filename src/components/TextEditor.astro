@@ -1,8 +1,9 @@
 ---
 import Type from "@lucide/astro/icons/type";
 import Button from "./ui/Button.astro";
-import { MARKER_COLORS } from "../data/markers";
-import { MARKER_COLOR_CLASS, MARKER_COLOR_LABELS } from "../data/marker-colors";
+import FieldLabel from "./ui/FieldLabel.astro";
+import TextField from "./ui/TextField.astro";
+import ColorSwatchGroup from "./ui/ColorSwatchGroup.astro";
 ---
 
 <div data-text-editor>
@@ -21,45 +22,17 @@ import { MARKER_COLOR_CLASS, MARKER_COLOR_LABELS } from "../data/marker-colors";
       </Button>
     </div>
 
-    <div class="flex flex-col gap-2">
-      <label
-        for="text-value"
-        class="font-mono text-xs font-semibold tracking-wider text-fg-secondary uppercase"
-      >
-        Texte
-      </label>
-      <input
-        id="text-value"
-        type="text"
-        data-text-field="value"
-        maxlength="60"
-        class="w-full rounded-sm border border-line-default bg-surface-base px-3 py-2 text-sm text-fg-primary placeholder:text-fg-muted focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-        placeholder="ZONE BLEUE"
-      />
-    </div>
+    <TextField
+      id="text-value"
+      label="Texte"
+      placeholder="ZONE BLEUE"
+      maxlength={60}
+      data-text-field="value"
+    />
 
     <fieldset class="flex flex-col gap-2">
-      <legend class="font-mono text-xs font-semibold tracking-wider text-fg-secondary uppercase">
-        Couleur de fond
-      </legend>
-      <div class="grid grid-cols-4 gap-2" role="radiogroup" aria-label="Couleur de fond">
-        {
-          MARKER_COLORS.map((color) => (
-            <button
-              type="button"
-              role="radio"
-              aria-checked="false"
-              data-text-field="background-color"
-              data-value={color}
-              aria-label={MARKER_COLOR_LABELS[color]}
-              class:list={[
-                "h-10 rounded-sm border border-line-default transition-colors aria-checked:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
-                MARKER_COLOR_CLASS[color],
-              ]}
-            />
-          ))
-        }
-      </div>
+      <FieldLabel as="legend">Couleur de fond</FieldLabel>
+      <ColorSwatchGroup fieldAttr="data-text-field" fieldValue="background-color" groupLabel="Couleur de fond" />
     </fieldset>
 
     <div data-text-delete-wrap hidden class="border-t border-line-subtle pt-4">
