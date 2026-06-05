@@ -126,6 +126,8 @@ const styleOptions = [
     finishBtn.addEventListener("click", closeEditor);
 
     bindColorSwatches<{ color: MarkerColor }>(colorBtns, store, "color");
+    // bindColorSwatches is generically named: it wires any data-value radio
+    // group and commits { [key]: value }, so it also drives the style group.
     bindColorSwatches<{ style: LineStyle }>(styleBtns, store, "style");
 
     deleteBtn.addEventListener("click", () => {
