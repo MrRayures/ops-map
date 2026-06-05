@@ -6,7 +6,7 @@ interface Option {
 
 // Only columns whose `grid-cols-N` class appears statically in the codebase
 // are allowed — Tailwind cannot detect dynamically built class names.
-type Columns = 2 | 4;
+type Columns = 2 | 3 | 4;
 
 interface Props {
   fieldAttr: string;
@@ -19,6 +19,7 @@ interface Props {
 const { fieldAttr, fieldValue, groupLabel, options, columns = 2 } = Astro.props;
 const gridColsClass: Record<Columns, string> = {
   2: "grid-cols-2",
+  3: "grid-cols-3",
   4: "grid-cols-4",
 };
 const gridClass = `grid ${gridColsClass[columns]} gap-2`;
