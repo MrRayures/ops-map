@@ -2,6 +2,7 @@ import { exportToFile, importFromFile, saveNow, update, type PersistedState } fr
 import { whenMapReady } from './leaflet-map-ref';
 import { hydrate as hydrateMarkers } from './markers-store';
 import { hydrate as hydrateZones } from './zones-store';
+import { hydrate as hydrateLines } from './lines-store';
 import { hydrate as hydrateTexts } from './texts-store';
 import { hydrate as hydrateSettings } from './settings-store';
 
@@ -26,6 +27,7 @@ export function initPersistenceControls(deps: PersistenceDeps): void {
     terrainInput.value = next.terrain;
     hydrateMarkers(next.markers);
     hydrateZones(next.zones);
+    hydrateLines(next.lines);
     hydrateTexts(next.texts);
     hydrateSettings(next.settings);
     onStateApplied();

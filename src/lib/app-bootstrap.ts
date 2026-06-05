@@ -9,6 +9,11 @@ import {
   subscribe as subscribeZones,
 } from './zones-store';
 import {
+  getState as getLinesState,
+  hydrate as hydrateLines,
+  subscribe as subscribeLines,
+} from './lines-store';
+import {
   getState as getTextsState,
   hydrate as hydrateTexts,
   subscribe as subscribeTexts,
@@ -45,6 +50,7 @@ export function initApp(): AppBoot | null {
     view: { center: [46.2, 2.2], zoom: 6 },
     markers: [],
     zones: [],
+    lines: [],
     texts: [],
     settings: { showGrid: false, gridStep: 'auto', showCursorCoords: false },
   };
@@ -72,6 +78,14 @@ export function initApp(): AppBoot | null {
     if (s.zones === lastZonesRef) return;
     lastZonesRef = s.zones;
     update({ zones: [...s.zones] });
+  });
+
+  hydrateLines(state.lines);
+  let lastLinesRef = getLinesState().lines;
+  subscribeLines((s) => {
+    if (s.lines === lastLinesRef) return;
+    lastLinesRef = s.lines;
+    update({ lines: [...s.lines] });
   });
 
   hydrateTexts(state.texts);
@@ -113,6 +127,7 @@ export function initApp(): AppBoot | null {
   const refreshPersistenceRefs = (): void => {
     lastMarkersRef = getMarkersState().markers;
     lastZonesRef = getZonesState().zones;
+    lastLinesRef = getLinesState().lines;
     lastTextsRef = getTextsState().texts;
   };
 
