@@ -10,6 +10,8 @@ import {
   type MarkerShape,
 } from '../data/markers';
 import type { Zone } from '../data/zones';
+import type { Line } from '../data/lines';
+import { LINE_STYLES, type LineStyle } from '../data/lines';
 import type { TextItem } from '../data/texts';
 import { DEFAULT_SETTINGS, type SettingsState } from '../data/settings';
 
@@ -23,10 +25,10 @@ declare global {
 }
 
 const STORAGE_KEY = 'ops-map:state';
-export const SCHEMA_VERSION = 8;
+export const SCHEMA_VERSION = 9;
 
 export interface PersistedState {
-  version: 8;
+  version: 9;
   savedAt: string;
   title: string;
   terrain: string;
@@ -36,6 +38,7 @@ export interface PersistedState {
   };
   markers: Marker[];
   zones: Zone[];
+  lines: Line[];
   texts: TextItem[];
   settings: SettingsState;
 }
@@ -81,6 +84,17 @@ function isZone(value: unknown): value is Zone {
   return true;
 }
 
+function isLine(value: unknown): value is Line {
+  if (typeof value !== 'object' || value === null) return false;
+  const l = value as Record<string, unknown>;
+  if (typeof l.id !== 'string') return false;
+  if (!Array.isArray(l.points) || l.points.length < 2) return false;
+  if (!l.points.every(isLatLng)) return false;
+  if (!MARKER_COLORS.includes(l.color as MarkerColor)) return false;
+  if (!LINE_STYLES.includes(l.style as LineStyle)) return false;
+  return true;
+}
+
 function isText(value: unknown): value is TextItem {
   if (typeof value !== 'object' || value === null) return false;
   const t = value as Record<string, unknown>;
@@ -115,6 +129,8 @@ function isValidState(raw: unknown): raw is PersistedState {
   if (!obj.markers.every(isMarker)) return false;
   if (!Array.isArray(obj.zones)) return false;
   if (!obj.zones.every(isZone)) return false;
+  if (!Array.isArray(obj.lines)) return false;
+  if (!obj.lines.every(isLine)) return false;
   if (!Array.isArray(obj.texts)) return false;
   if (!obj.texts.every(isText)) return false;
   if (!isSettings(obj.settings)) return false;
@@ -131,6 +147,7 @@ function migrate(raw: unknown): PersistedState | null {
       terrain: '',
       markers: [],
       zones: [],
+      lines: [],
       texts: [],
       settings: { ...DEFAULT_SETTINGS },
     };
@@ -142,6 +159,7 @@ function migrate(raw: unknown): PersistedState | null {
       version: SCHEMA_VERSION,
       terrain: '',
       zones: [],
+      lines: [],
       texts: [],
       settings: { ...DEFAULT_SETTINGS },
     };
@@ -152,6 +170,7 @@ function migrate(raw: unknown): PersistedState | null {
       ...(raw as object),
       version: SCHEMA_VERSION,
       terrain: '',
+      lines: [],
       texts: [],
       settings: { ...DEFAULT_SETTINGS },
     };
@@ -162,6 +181,7 @@ function migrate(raw: unknown): PersistedState | null {
       ...(raw as object),
       version: SCHEMA_VERSION,
       terrain: '',
+      lines: [],
       settings: { ...DEFAULT_SETTINGS },
     };
     return isValidState(upgraded) ? upgraded : null;
@@ -172,6 +192,7 @@ function migrate(raw: unknown): PersistedState | null {
       ...(raw as object),
       version: SCHEMA_VERSION,
       terrain: '',
+      lines: [],
       settings: { ...DEFAULT_SETTINGS, ...(obj.settings ?? {}) },
     };
     return isValidState(upgraded) ? upgraded : null;
@@ -182,6 +203,16 @@ function migrate(raw: unknown): PersistedState | null {
       ...(raw as object),
       version: SCHEMA_VERSION,
       terrain: '',
+      lines: [],
+    };
+    return isValidState(upgraded) ? upgraded : null;
+  }
+  if (version === 8) {
+    // v8 → v9: add lines (default empty)
+    const upgraded = {
+      ...(raw as object),
+      version: SCHEMA_VERSION,
+      lines: [],
     };
     return isValidState(upgraded) ? upgraded : null;
   }
