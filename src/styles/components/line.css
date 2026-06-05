@@ -1,0 +1,45 @@
+/* Line polyline: stroke-only, so only the stroke catches clicks. */
+.c-line {
+  pointer-events: visibleStroke;
+}
+
+/* Vertex drag handle (only on selected line). */
+.c-line-vertex {
+  width: 12px;
+  height: 12px;
+  background: var(--color-surface-base);
+  border: 2px solid var(--color-accent);
+  border-radius: 50%;
+  cursor: grab;
+  pointer-events: auto;
+}
+.c-line-vertex:active {
+  cursor: grabbing;
+}
+
+/* Midpoint "insert vertex" handle — smaller, lower-emphasis ghost dot. */
+.c-line-midpoint {
+  width: 10px;
+  height: 10px;
+  background: transparent;
+  border: 2px dashed var(--color-accent);
+  border-radius: 50%;
+  cursor: copy;
+  pointer-events: auto;
+  opacity: 0.6;
+  transition: opacity 0.12s ease-out;
+}
+.c-line-midpoint:hover {
+  opacity: 1;
+  background: var(--color-surface-base);
+}
+
+/* Placing-mode preview (drafted line). */
+.c-line-draft-vertex {
+  width: 8px;
+  height: 8px;
+  background: var(--color-accent);
+  border: 1px solid var(--color-surface-base);
+  border-radius: 50%;
+  pointer-events: none;
+}
