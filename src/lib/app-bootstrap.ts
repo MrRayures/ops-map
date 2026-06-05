@@ -14,7 +14,7 @@ import {
   subscribe as subscribeTexts,
 } from './texts-store';
 import { hydrate as hydrateSettings, subscribe as subscribeSettings } from './settings-store';
-import { bootstrap, update, type PersistedState } from './storage';
+import { SCHEMA_VERSION, bootstrap, update, type PersistedState } from './storage';
 
 export interface AppBoot {
   state: PersistedState;
@@ -38,7 +38,7 @@ export function initApp(): AppBoot | null {
   if (!titleInput || !terrainInput) return null;
 
   const defaults: PersistedState = {
-    version: 8,
+    version: SCHEMA_VERSION,
     savedAt: new Date().toISOString(),
     title: titleInput.value,
     terrain: terrainInput.value,
