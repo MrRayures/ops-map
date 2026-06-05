@@ -6,8 +6,8 @@ import {
   MARKER_COLORS,
   MARKER_ICONS,
   type MarkerShape,
-  type MarkerColor,
 } from "../data/markers";
+import { MARKER_COLOR_CLASS, MARKER_COLOR_LABELS } from "../data/marker-colors";
 import { buildIconSvg } from "../data/marker-icons";
 
 const shapeLabels: Record<MarkerShape, string> = {
@@ -15,28 +15,6 @@ const shapeLabels: Record<MarkerShape, string> = {
   triangle: "Triangle",
   circle: "Cercle",
   diamond: "Losange",
-};
-
-const colorClass: Record<MarkerColor, string> = {
-  "team-red": "bg-team-red",
-  "team-blue": "bg-team-blue",
-  "team-green": "bg-team-green",
-  "team-purple": "bg-team-purple",
-  "marker-objective": "bg-marker-objective",
-  "marker-spawn": "bg-marker-spawn",
-  "marker-danger": "bg-marker-danger",
-  "marker-cover": "bg-marker-cover",
-};
-
-const colorLabels: Record<MarkerColor, string> = {
-  "team-red": "Équipe rouge",
-  "team-blue": "Équipe bleue",
-  "team-green": "Équipe verte",
-  "team-purple": "Équipe violette",
-  "marker-objective": "Objectif",
-  "marker-spawn": "Spawn",
-  "marker-danger": "Danger",
-  "marker-cover": "Couverture",
 };
 ---
 
@@ -95,10 +73,10 @@ const colorLabels: Record<MarkerColor, string> = {
               aria-checked="false"
               data-field="color"
               data-value={color}
-              aria-label={colorLabels[color]}
+              aria-label={MARKER_COLOR_LABELS[color]}
               class:list={[
                 "h-10 rounded-sm border border-line-default transition-colors aria-checked:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
-                colorClass[color],
+                MARKER_COLOR_CLASS[color],
               ]}
             />
           ))
