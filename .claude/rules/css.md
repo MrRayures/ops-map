@@ -13,7 +13,6 @@ Put all CSS file in src/styles/
 ## Selectors BEM Naming
 
 - Class-based selectors only — no IDs for styling
-- Flat selectors only: `.c-card-title`, never `.c-card__title`
 - Namespace prefixes: c- component, u- utility, is-/has- state
 - One class per element — no chained selectors
 - :where() for zero-specificity resets
@@ -23,12 +22,6 @@ Put all CSS file in src/styles/
 
 - Only for: pseudo-elements, pseudo-classes, state classes, media queries
 - Maximum 1 levels deep
-
-## Units
-
-- rem for font-size, padding, margin — never raw px (except 1px borders)
-- Unitless line-height
-- clamp() for fluid responsive values
 
 ## Layout
 

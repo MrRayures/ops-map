@@ -1,30 +1,57 @@
 # SCSS — Project Conventions
 
-## BEM Naming
+## Folder
 
-- Flat selectors only: `.c-card-title`, never `.c-card__title`
+Put all CSS file in src/styles/
+
+## Custom Properties
+
+- Define design tokens in :root
+- Use semantic naming: --color-primary, --space-md
+- Scope overrides to components: .c-card { --card-bg: ... }
+
+## Selectors BEM Naming
+
+- Class-based selectors only — no IDs for styling
 - Namespace prefixes: c- component, u- utility, is-/has- state
 - One class per element — no chained selectors
+- :where() for zero-specificity resets
+- :is() for grouping related selectors
 
 ## Nesting
 
 - Only for: pseudo-elements, pseudo-classes, state classes, media queries
-- Maximum 3 levels deep
+- Maximum 1 levels deep
+
+## Layout
+
+- Flexbox for 1D layouts, Grid for 2D layouts
+- Logical properties: margin-inline, padding-block
+- clamp() for fluid values (font-size, spacing)
+- Container queries for component-level responsive
 
 ## Units
 
-- rem for font-size, padding, margin — never raw px (except 1px borders)
+- rem for font-size, padding, margin
+- px only for borders and shadows
 - Unitless line-height
-- clamp() for fluid responsive values
+- Percentage/viewport units for layout dimensions
+
+## Media Queries
+
+- Mobile-first with min-width
+- Co-located with the component rules
+- Use prefers-reduced-motion, prefers-color-scheme
+
+## Avoid
+
+- No !important
+- No element selectors in components (div, span)
+- No inline styles in HTML
+- No vendor prefixes (use Autoprefixer)
 
 ## Module System
 
 - Always `@use` — never `@import` (deprecated)
 - Design tokens as CSS custom properties in :root
 - Namespace imports: `@use '../tools/mixins' as *`
-
-## Media Queries
-
-- Mobile-first with min-width breakpoints
-- Co-located in the component file, not a separate file
-- Use project mixin if available
